@@ -1,0 +1,22 @@
+% Edge AI report (<= 15 pages). Sections follow the professor's outline (EA1 slide 30).
+% Filled AS WE GO from docs/. Build: latexmk -pdf main.tex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{graphicx,booktabs,amsmath,hyperref}
+\title{EdgeTrash: benchmarking a trash detector across edge devices for a TurtleBot3}
+\author{TrashRobotEdge}
+\date{January 2027}
+\begin{document}
+\maketitle
+
+\section{Context and objectives}                 % plan §1, §3; requirements from the robot
+\section{Sensors: uncertainty and working ranges} % plan §10, our OAK-D Pro measurements
+\section{Data ingestion and pre-processing}      % data/README.md, plan §11
+\section{Neural network architecture and computation graph} % plan §12, model-choice ADR, Netron figure
+\section{Optimisation}                           % plan §13: quantization, pruning, precision per device, power
+\section{Benchmark protocol}                     % docs/protocol.md (8 steps)
+\section{Results}                                % results/figures (CDF, box plots, Pareto)
+\section{Discussion: bottlenecks, trade-offs, threats to validity}
+\section{Reproducibility}                        % README, scripts, raw logs, versions
+
+\end{document}
