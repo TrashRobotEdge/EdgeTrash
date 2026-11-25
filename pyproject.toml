@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "edgetrash"
+version = "0.0.1"
+description = "ROS-free trash detection pipeline (preprocess, infer, postprocess) with per-stage timing, shared by the benchmark and the robot."
+requires-python = ">=3.10"   # Pi4 on Ubuntu 22.04 ships 3.10
+dependencies = []            # added per backend when chosen (S1), with pinned versions
+
+[tool.setuptools]
+packages = ["edgetrash"]
