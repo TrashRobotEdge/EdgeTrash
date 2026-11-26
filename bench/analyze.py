@@ -10,6 +10,7 @@ results/accuracy.csv (mAP, drop vs FP32, quality gate) and results/figures/*.png
 import argparse
 import json
 import re
+import textwrap
 from pathlib import Path
 
 import matplotlib
@@ -18,6 +19,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
+from matplotlib.ticker import FixedLocator, NullLocator, ScalarFormatter  # noqa: E402
 
 from meta import RAW, REPO  # noqa: E402
 from power import load_meter_csv  # noqa: E402
@@ -139,23 +141,39 @@ def chunks(items: list, n: int = len(SERIES)):
     return [items[i : i + n] for i in range(0, len(items), n)] or [[]]
 
 
+def log_x(ax):
+    """Log x axis with plain 1-2-5 ticks (ms values readable, not 10^2)."""
+    ax.set_xscale("log")
+    lo, hi = ax.get_xlim()
+    ax.xaxis.set_major_locator(FixedLocator([m * 10**e for e in range(-1, 5) for m in (1, 2, 5) if lo <= m * 10**e <= hi]))
+    ax.xaxis.set_major_formatter(ScalarFormatter())
+    ax.xaxis.set_minor_locator(NullLocator())
+
+
 def title(ax, text: str, label: str | None):
-    ax.set_title(text + (f"\n{label}" if label else ""), loc="left", color=INK, fontsize=10)
+    ax.set_title("\n".join([text, *textwrap.wrap(label or "", 70)]), loc="left", color=INK, fontsize=10)
 
 
 def fig_cdf(device: str, samples: dict, label: str | None):
-    for k, names in enumerate(chunks(sorted(samples))):
-        fig, ax = plt.subplots(figsize=(7, 4))
-        for color, name in zip(SERIES, names, strict=False):  # names <= 8 per chunk
-            x = np.sort(samples[name])
-            ax.plot(x, np.arange(1, len(x) + 1) / len(x), color=color, label=name)
-        ax.axhline(0.95, color=MUTED, linewidth=0.8, linestyle="--")
-        ax.set(xlabel="pipeline latency, frame in RAM -> boxes (ms)", ylabel="fraction of frames (dashed: p95)", xscale="log")
-        title(ax, f"{device}: latency CDF (all repetitions pooled)", label)
-        ax.legend(frameon=False, fontsize=7, loc="lower right")
-        fig.tight_layout()
-        fig.savefig(FIG / f"latency_cdf_{device}{f'_{k}' if k else ''}.png")
-        plt.close(fig)
+    """One CDF per architecture, so a colour means the same variant within a figure and runtimes/precisions compare."""
+    for arch in sorted({n.split("-")[0] for n in samples}):
+        for k, names in enumerate(chunks(sorted(n for n in samples if n.split("-")[0] == arch))):
+            cdf(device, arch, k, names, samples, label)
+
+
+def cdf(device: str, arch: str, k: int, names: list, samples: dict, label: str | None):
+    fig, ax = plt.subplots(figsize=(7, 4))
+    for color, name in zip(SERIES, names, strict=False):  # names <= 8 per chunk
+        x = np.sort(samples[name])
+        ax.plot(x, np.arange(1, len(x) + 1) / len(x), color=color, label=name)
+    ax.axhline(0.95, color=MUTED, linewidth=0.8, linestyle="--")
+    ax.set(xlabel="pipeline latency, frame in RAM -> boxes (ms)", ylabel="fraction of frames (dashed: p95)")
+    log_x(ax)
+    title(ax, f"{device}, {arch}: latency CDF (all repetitions pooled)", label)
+    ax.legend(frameon=False, fontsize=7, loc="lower right")
+    fig.tight_layout()
+    fig.savefig(FIG / f"latency_cdf_{device}_{arch}{f'_{k}' if k else ''}.png")
+    plt.close(fig)
 
 
 def fig_box(device: str, samples: dict, label: str | None):
@@ -173,7 +191,8 @@ def fig_box(device: str, samples: dict, label: str | None):
         capprops={"color": MUTED},
     )
     ax.set_yticks(range(1, len(names) + 1), names, fontsize=7)
-    ax.set(xlabel="pipeline latency (ms), whiskers 1.5 IQR, outliers hidden", xscale="log")
+    ax.set(xlabel="pipeline latency (ms), whiskers 1.5 IQR, outliers hidden")
+    log_x(ax)
     ax.grid(axis="y", visible=False)
     title(ax, f"{device}: latency per variant", label)
     fig.tight_layout()
@@ -193,10 +212,25 @@ def fig_stages(device: str, summary: pd.DataFrame, label: str | None):
     ax.tick_params(axis="y", labelsize=7)
     ax.grid(axis="y", visible=False)
     title(ax, f"{device}: where the time goes", label)
-    ax.legend(frameon=False, ncol=3, fontsize=8, loc="lower center", bbox_to_anchor=(0.5, 1.12 if label else 1.04))
+    ax.legend(frameon=False, fontsize=8, loc="lower right")  # fastest variants at the bottom: short bars
     fig.tight_layout()
     fig.savefig(FIG / f"stages_{device}.png")
     plt.close(fig)
+
+
+def label_points(fig, ax, d: pd.DataFrame):
+    """Direct labels; a label that would overlap an earlier one tries the next offset (points can share a mAP)."""
+    placed, renderer = [], fig.canvas.get_renderer()
+    for _, r in d.iterrows():
+        for dy in (3, -11, 13, -21, 23, -31):
+            t = ax.annotate(r.variant, (r.p95_ms, r.map50_95), textcoords="offset points", xytext=(5, dy), fontsize=7, color=INK)
+            box = t.get_window_extent(renderer)
+            if not any(box.overlaps(b) for b in placed):
+                break
+            t.remove()
+        else:
+            t = ax.annotate(r.variant, (r.p95_ms, r.map50_95), textcoords="offset points", xytext=(5, 3), fontsize=7, color=INK)
+        placed.append(t.get_window_extent(renderer))
 
 
 def fig_pareto(device: str, summary: pd.DataFrame, acc: pd.DataFrame, label: str | None):
@@ -212,9 +246,10 @@ def fig_pareto(device: str, summary: pd.DataFrame, acc: pd.DataFrame, label: str
     fig, ax = plt.subplots(figsize=(7, 4.5))
     ax.plot(front.p95_ms, front.map50_95, color=MUTED, linewidth=1, drawstyle="steps-post", zorder=1)
     ax.scatter(d.p95_ms, d.map50_95, s=40, color=SERIES[0], edgecolor=SURFACE, linewidth=2, zorder=2)
-    for _, r in d.iterrows():
-        ax.annotate(r.variant, (r.p95_ms, r.map50_95), textcoords="offset points", xytext=(5, 3), fontsize=7, color=INK)
-    ax.set(xlabel="p95 pipeline latency (ms, median of repetitions)", ylabel="mAP@0.5:0.95", xscale="log")
+    ax.set(xlabel="p95 pipeline latency (ms, median of repetitions)", ylabel="mAP@0.5:0.95")
+    ax.set_xlim(d.p95_ms.min() / 1.3, d.p95_ms.max() * 3)  # room for the labels on the right
+    log_x(ax)
+    label_points(fig, ax, d)
     title(ax, f"{device}: accuracy vs latency, grey = Pareto front{'' if own else ' (accuracy measured on another device)'}", label)
     fig.tight_layout()
     fig.savefig(FIG / f"pareto_{device}.png")
@@ -249,6 +284,8 @@ def main():
     summary = summarize(pd.DataFrame(rows))
     summary.to_csv(OUT / "summary.csv", index=False, float_format="%.3f")
     print(summary[["device", "variant", "reps", "p50_ms", "p95_ms", "p95_iqr_ms", "fps"]].to_string(index=False, float_format="%.1f"))
+    for old in FIG.glob("*.png"):  # figures are outputs: regenerate them all, no stale ones
+        old.unlink()
     for device, by_variant in samples.items():
         fig_cdf(device, by_variant, labels[device])
         fig_box(device, by_variant, labels[device])
