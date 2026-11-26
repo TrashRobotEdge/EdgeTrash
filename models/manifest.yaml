@@ -1,7 +1,7 @@
 variants:
   yolov8n-coco-640-fp32-onnx:
     file: yolov8n-coco-640-fp32-onnx.onnx
-    sha256: f6163fa2d72ebdd1805cae17bd0b5a7adc442829007034a8cbc8b40115ea4c3e
+    sha256: 9bdd5f0bef46918cb48d121a1cd651f6388e2d603b59aa7a26ab95b7f8b6c3db
     size_mb: 12.85
     backend: onnx
     precision: fp32
@@ -10,21 +10,23 @@ variants:
     input_size: 640
     head: yolo
     classes: coco80
-    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-fp16 tflite-int8
-      --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T11:10:10Z'
+    made_by: python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T13:04:05Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
       tensorflow: 2.19.1
       onnx2tf: 1.28.8
   yolov8n-coco-640-int8-onnx:
     file: yolov8n-coco-640-int8-onnx.onnx
-    sha256: 43f284067e2edf8da8b4da97bb6eff80c42b5aba06f6a4be8e4b08b23d7dd6c6
+    sha256: 40a5bed232d788d78e77ab82f5f84fab66a08d3edc35c809349bed8e046f3e07
     size_mb: 3.65
     backend: onnx
     precision: int8
@@ -36,14 +38,15 @@ variants:
     classes: coco80
     calib: data/splits/coco-calib.txt
     calib_images: 200
-    made_by: python models/export.py --arch yolov8n --to onnx-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T11:45:42Z'
+    made_by: python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T13:04:36Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -65,7 +68,7 @@ variants:
     head: yolo
     classes: coco80
     made_by: python models/compile_oak.py --variant yolov8n-coco-640-fp32-onnx
-    made_at: '2026-11-26T11:11:20Z'
+    made_at: '2026-11-26T13:17:56Z'
     versions:
       python: 3.10.12
       blobconverter: 1.4.3
@@ -83,12 +86,12 @@ variants:
     head: hailo_nms
     classes: coco80
     made_by: python models/compile_hailo.py --zoo yolov8n
-    made_at: '2026-11-26T11:14:38Z'
+    made_at: '2026-11-26T13:18:20Z'
     versions:
       python: 3.10.12
   yolov8n-coco-640-fp32-tflite:
     file: yolov8n-coco-640-fp32-tflite.tflite
-    sha256: bd1e4b355d6e455c80541cf7ac07654ae1efd7b96f4cb3499a74fd8876bde189
+    sha256: 5a55721ce651e5256109dbbd35eadf07e499b0e4377fbae557cad02b7d10b8c2
     size_mb: 12.84
     backend: tflite
     precision: fp32
@@ -98,15 +101,15 @@ variants:
     input_size: 640
     head: yolo
     classes: coco80
-    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-int8 --calib
-      data/splits/coco-calib.txt
-    made_at: '2026-11-26T11:21:22Z'
+    made_by: python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T13:06:37Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -114,7 +117,7 @@ variants:
       onnx2tf: 1.28.8
   yolov8n-coco-640-int8-tflite:
     file: yolov8n-coco-640-int8-tflite.tflite
-    sha256: 43b7b672d9cd44f2489ab41c2a80d8b1856a95206417d5e8565f0230b1e74c4f
+    sha256: b43719d74c262542ee0a8061e86eff73821d826343c3f87007b44ce219e33a01
     size_mb: 3.64
     backend: tflite
     precision: int8
@@ -126,15 +129,15 @@ variants:
     classes: coco80
     calib: data/splits/coco-calib.txt
     calib_images: 200
-    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-int8 --calib
-      data/splits/coco-calib.txt
-    made_at: '2026-11-26T11:21:22Z'
+    made_by: python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T13:06:37Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -142,7 +145,7 @@ variants:
       onnx2tf: 1.28.8
   yolov8n-coco-320-fp32-onnx:
     file: yolov8n-coco-320-fp32-onnx.onnx
-    sha256: 5083fb604e779a1c9d0af76fe7dca7272e9510a2b62f477c876f8eb018e80052
+    sha256: 43b5fa620bf4d95ec7e5294aafcb8fbe7c621d48567631e555667008ab4e250c
     size_mb: 12.73
     backend: onnx
     precision: fp32
@@ -152,13 +155,13 @@ variants:
     head: yolo
     classes: coco80
     made_by: python models/export.py --arch yolov8n --size 320 --to onnx-fp32
-    made_at: '2026-11-26T11:22:20Z'
+    made_at: '2026-11-26T13:06:47Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -166,7 +169,7 @@ variants:
       onnx2tf: 1.28.8
   yolov8n-coco_p51-640-fp32-onnx:
     file: yolov8n-coco_p51-640-fp32-onnx.onnx
-    sha256: 6b136523a2047595e23e133c966a5d2e1def967f0a1d5e44384370cbe7b94377
+    sha256: ef4e0a7db9465f6a967d889b6621e9ba2088f8a8763aca2a6616f50426fb733a
     size_mb: 5.48
     backend: onnx
     precision: fp32
@@ -257,13 +260,13 @@ variants:
     - toothbrush
     made_by: python models/export.py --arch yolov8n --weights models/files/yolov8n-coco_p51.pt
       --to onnx-fp32
-    made_at: '2026-11-26T12:36:04Z'
+    made_at: '2026-11-26T13:07:04Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -283,13 +286,13 @@ variants:
     classes: coco91
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
       tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T12:01:55Z'
+    made_at: '2026-11-26T13:07:14Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -312,13 +315,13 @@ variants:
     calib_images: 200
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
       tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T12:02:19Z'
+    made_at: '2026-11-26T13:07:38Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -339,13 +342,13 @@ variants:
     classes: coco91
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
       tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T12:12:50Z'
+    made_at: '2026-11-26T13:17:19Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -366,13 +369,13 @@ variants:
     classes: coco91
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
       tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T12:12:50Z'
+    made_at: '2026-11-26T13:17:19Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -395,13 +398,13 @@ variants:
     calib_images: 200
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
       tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T12:12:50Z'
+    made_at: '2026-11-26T13:17:19Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
       torch: 2.14.1+cpu
       torchvision: 0.29.2+cpu
-      onnx: 1.22.0
+      onnx: 1.20.1
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
@@ -424,7 +427,7 @@ variants:
     classes: coco91
     anchors: ssdlite-coco-320.anchors.npy
     made_by: python models/compile_oak.py --variant ssdlite-coco-320-fp32-onnx
-    made_at: '2026-11-26T12:13:11Z'
+    made_at: '2026-11-26T13:18:18Z'
     versions:
       python: 3.10.12
       blobconverter: 1.4.3
