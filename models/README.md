@@ -7,10 +7,10 @@ Variant name = `<arch>-<weights>-<input size>-<precision>-<runtime>`, e.g. `yolo
 | Step | Command (VM) | Gives |
 |---|---|---|
 | Fine-tune | `python models/train.py --arch yolov8n\|yolo11n\|yolov5nu\|ssdlite --data data/cans.yaml` | `files/<arch>-cans.pt` |
-| Prune (structured) | `python models/prune.py --arch yolov8n --weights files/yolov8n-cans.pt --target 0.5 --data data/cans.yaml` | `files/yolov8n-cans_p50.pt` |
+| Prune (structured) | `python models/prune.py --arch yolov8n --weights models/files/yolov8n-cans.pt --target 0.5 --data data/cans.yaml` | `files/yolov8n-cans_p50ft.pt` (`ft` = fine-tuned after pruning) |
 | CPU formats | `python models/export.py --arch yolov8n --weights … --to onnx-fp32 onnx-int8 tflite-fp32 tflite-int8 --calib data/splits/<calib>.txt [--size 320]` | ONNX FP32, ORT INT8 (static QDQ), LiteRT FP32 / INT8 (static) |
 | OAK | `python models/compile_oak.py --variant <…-fp32-onnx>` | `.blob` FP16 (Luxonis online converter) |
 | Hailo | `.venv-hailo/bin/python models/compile_hailo.py --variant <…-fp32-onnx> --calib …` · `--zoo yolov8n` for the vendor reference | `.hef` INT8 |
 | TVM | `python models/compile_tvm.py --variant <…-fp32-onnx> --target pi4\|pi5` (on that Pi: TVM conflicts with the VM's litert-torch) | `.so`, untuned |
 
-Known gaps (see [docs/problems.md](../docs/problems.md)): no FP16 TFLite for YOLO (Ultralytics' LiteRT exporter has none) · Hailo: no zoo recipe for YOLOv5nu / SSDLite · SSDLite TFLite goes through onnx2tf, not litert-torch.
+Known gaps (see [docs/problems.md](../docs/problems.md)): no FP16 TFLite for YOLO (Ultralytics' LiteRT exporter has none) · Hailo: no zoo recipe for YOLOv5nu / SSDLite · SSDLite TFLite goes through onnx2tf, not litert-torch · a pruned model without `--data` (no fine-tune) detects nothing (mAP 0.0 at 51 %, scores near 0 already at 7 %).

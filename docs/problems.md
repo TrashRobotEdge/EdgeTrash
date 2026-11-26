@@ -80,3 +80,14 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Symptom:** `bench/accuracy.py` on SSDLite ran for 18 min without a progress line (stdout is buffered into the log file, so "no line" didn't mean "stuck").
 - **Diagnosis:** profiled one image at the mAP threshold (conf 0.001): 11.7k candidate boxes, 622 ms of 634 ms in OpenCV's `NMSBoxesBatched`, which runs one NMS over all classes at once (cost grows with n²). First guess (too many candidates, add a cap) was wrong: measured 11.7k, below any sensible cap.
 - **Chosen:** one `cv2.dnn.NMSBoxes` per class (same semantics). SSDLite post-processing 736 → 104 ms at conf 0.001; YOLOv8n at the operating threshold (0.25) 1.9 ms.
+
+### 2026-11-26: pruned YOLOv8n gives mAP 0.0 without fine-tuning (benchmark kit, issue #28)
+- **Symptom:** `yolov8n-coco_p51-640-fp32-onnx` (51 % of the MACs removed): mAP 0.0 on the 500 eval images. Max class score 0.002 vs 0.93 unpruned on the same image.
+- **Diagnosis:** not a pruning bug. Group by group, the pruned model matches the unpruned one with those channels zeroed (max score diff 4e-7). But zeroing the channels the pruner picks already kills the model, even at the first step (7 % of the MACs: max score 0.01). Likely cause (not verified): a channel with small weights still passes its BatchNorm offset on, and removing it shifts every layer after it, over 47 groups.
+- **Alternatives:** fine-tune after pruning (`prune.py --data`) · prune step by step with a short fine-tune after each · an importance that accounts for BatchNorm.
+- **Chosen:** fine-tune after pruning, on our cans dataset (#28). Not feasible on COCO on the VM's CPU. In the dry run the pruned variant only measures latency, and it fails the quality gate as it should.
+
+### 2026-11-26: VM latency is noisy, INT8 is sometimes slower than FP32 (benchmark kit)
+- **Symptom:** same variant, rep to rep: SSDLite FP32 ONNX p50 13.7 → 23.5 → 13.7 ms. LiteRT INT8 slower than LiteRT FP32 (YOLOv8n 83 vs 67 ms, SSDLite 71 vs 26 ms); ORT INT8 faster for YOLOv8n (66 vs 104 ms), slower for SSDLite (20 vs 14 ms).
+- **Diagnosis:** the VM shares 4 cores with the host and has no fixed governor or cooling, which is why the protocol uses repetitions and IQR. INT8 speed depends on the CPU's integer kernels: not diagnosed on x86, the Pis' ARM cores are what matter.
+- **Chosen:** VM numbers check the code only (said in every figure title). Check INT8 vs FP32 on the Pis before drawing any conclusion.
