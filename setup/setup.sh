@@ -13,7 +13,7 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGS=(pi4-cpu pi5-cpu pi5-hailo oak vm-dev vm-hailo)
 TORCH_INDEX="https://download.pytorch.org/whl/cpu"
-HAILO_ZOO="git+https://github.com/hailo-ai/hailo_model_zoo.git@v2.17"  # pairs with DFC 3.33.0 / HailoRT 4.23.0
+HAILO_ZOO_TAG="v2.17"  # Hailo Model Zoo: pairs with DFC 3.33.0 / HailoRT 4.23.0
 CONFIG="" UI=1 YES=0 DFC=""
 export PYTHONPATH=""            # a sourced ROS setup leaks its packages into our venv otherwise
 export PYTHONIOENCODING=utf-8
@@ -165,9 +165,14 @@ vm_hailo() {  # compiler only: no UI, no smoke test (nothing runs without the ch
   apt_install python3.10-dev python3-tk graphviz libgraphviz-dev
   make_venv "$REPO/.venv-hailo" "" python3.10
   "$REPO/.venv-hailo/bin/pip" install -q "$DFC"
-  # the zoo's setup.py checks the DFC is installed: build it in this venv, where it can see it
+  # Hailo's documented install: a clone + pip install -e (a pip install from the git URL drops its
+  # postprocess_config/). --no-build-isolation: its setup.py checks the DFC is installed.
+  local zoo="$REPO/.venv-hailo/src/hailo_model_zoo"
+  if [[ ! -d "$zoo" ]]; then
+    git clone -q --depth 1 --branch "$HAILO_ZOO_TAG" https://github.com/hailo-ai/hailo_model_zoo.git "$zoo"
+  fi
   "$REPO/.venv-hailo/bin/pip" install -q setuptools wheel
-  "$REPO/.venv-hailo/bin/pip" install -q --no-build-isolation "$HAILO_ZOO"
+  "$REPO/.venv-hailo/bin/pip" install -q --no-build-isolation -e "$zoo"
   # edgetrash without deps: the DFC pins numpy 1.26.4 and the zoo brings its own OpenCV, ours would upgrade numpy
   (cd "$REPO" && .venv-hailo/bin/pip install -q --no-deps -e .)
   "$REPO/.venv-hailo/bin/python" -c "import cv2, numpy, yaml, hailo_sdk_client" || die "Hailo venv broken: see the pip output above"
