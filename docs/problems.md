@@ -91,3 +91,8 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Symptom:** same variant, rep to rep: SSDLite FP32 ONNX p50 13.7 → 23.5 → 13.7 ms. LiteRT INT8 slower than LiteRT FP32 (YOLOv8n 83 vs 67 ms, SSDLite 71 vs 26 ms); ORT INT8 faster for YOLOv8n (66 vs 104 ms), slower for SSDLite (20 vs 14 ms).
 - **Diagnosis:** the VM shares 4 cores with the host and has no fixed governor or cooling, which is why the protocol uses repetitions and IQR. INT8 speed depends on the CPU's integer kernels: not diagnosed on x86, the Pis' ARM cores are what matter.
 - **Chosen:** VM numbers check the code only (said in every figure title). Check INT8 vs FP32 on the Pis before drawing any conclusion.
+
+### 2026-11-26: Hailo Model Zoo wouldn't install next to the compiler (benchmark kit, issue #43)
+- **Symptom:** `setup.sh --config vm-hailo` failed: "The Dataflow Compiler package 'hailo-dataflow-compiler' was not found", although the wheel was in the same `pip install`. After a fix, `pip` reported numpy 2.2.6 while the DFC pins numpy 1.26.4.
+- **Diagnosis:** the zoo's `setup.py` checks the DFC is installed, but pip builds it in an isolated environment that can't see it. Then our own `opencv-python-headless==5.1.0.95` pulled numpy 2.x.
+- **Chosen:** install the DFC first, then the zoo with `--no-build-isolation`. No extra OpenCV in `.venv-hailo` (the zoo brings 4.11). `setup.sh` now imports `cv2`, `numpy`, `yaml`, `hailo_sdk_client` at the end and stops if one fails. Checked by deleting `.venv-hailo` and rebuilding it from scratch.

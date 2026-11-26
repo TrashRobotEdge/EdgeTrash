@@ -164,8 +164,13 @@ vm_hailo() {  # compiler only: no UI, no smoke test (nothing runs without the ch
   need_venv python3.10
   apt_install python3.10-dev python3-tk graphviz libgraphviz-dev
   make_venv "$REPO/.venv-hailo" "" python3.10
-  "$REPO/.venv-hailo/bin/pip" install -q "$DFC" "$HAILO_ZOO"
-  (cd "$REPO" && .venv-hailo/bin/pip install -q --no-deps -e . && .venv-hailo/bin/pip install -q "pyyaml==6.0.4" "opencv-python-headless==5.1.0.95")
+  "$REPO/.venv-hailo/bin/pip" install -q "$DFC"
+  # the zoo's setup.py checks the DFC is installed: build it in this venv, where it can see it
+  "$REPO/.venv-hailo/bin/pip" install -q setuptools wheel
+  "$REPO/.venv-hailo/bin/pip" install -q --no-build-isolation "$HAILO_ZOO"
+  # edgetrash without deps: the DFC pins numpy 1.26.4 and the zoo brings its own OpenCV, ours would upgrade numpy
+  (cd "$REPO" && .venv-hailo/bin/pip install -q --no-deps -e .)
+  "$REPO/.venv-hailo/bin/python" -c "import cv2, numpy, yaml, hailo_sdk_client" || die "Hailo venv broken: see the pip output above"
   ok "$("$REPO/.venv-hailo/bin/pip" list 2>/dev/null | grep -i -E '^hailo' | tr -s ' ' | paste -sd',')"
   UI=0
 }
