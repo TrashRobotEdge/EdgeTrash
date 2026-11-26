@@ -12,6 +12,7 @@ architectures the zoo knows are accepted. Registers <arch>-<tag>-<size>-int8-hai
 import argparse
 import shutil
 import subprocess
+import sys
 import tempfile
 import urllib.request
 from pathlib import Path
@@ -70,7 +71,7 @@ def main():
         for p in read_list(args.calib)[:CALIB_LIMIT]:
             (calib_dir / p.name).symlink_to(p)
         cmd = [
-            "hailomz",
+            str(Path(sys.executable).parent / "hailomz"),  # the venv's own CLI, activated or not
             "compile",
             ZOO_NAME[v["arch"]],
             "--ckpt",
