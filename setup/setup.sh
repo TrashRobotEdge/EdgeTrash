@@ -171,7 +171,7 @@ vm_hailo() {  # compiler only: no UI, no smoke test (nothing runs without the ch
   if [[ ! -d "$zoo" ]]; then
     git clone -q --depth 1 --branch "$HAILO_ZOO_TAG" https://github.com/hailo-ai/hailo_model_zoo.git "$zoo"
   fi
-  "$REPO/.venv-hailo/bin/pip" install -q setuptools wheel
+  "$REPO/.venv-hailo/bin/pip" install -q "setuptools==75.8.0" "wheel==0.48.0"  # Ubuntu 22.04 venvs ship 59.6: no editable installs
   "$REPO/.venv-hailo/bin/pip" install -q --no-build-isolation -e "$zoo"
   # edgetrash without deps: the DFC pins numpy 1.26.4 and the zoo brings its own OpenCV, ours would upgrade numpy
   (cd "$REPO" && .venv-hailo/bin/pip install -q --no-deps -e .)
