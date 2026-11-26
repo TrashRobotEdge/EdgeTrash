@@ -1,0 +1,466 @@
+variants:
+  yolov8n-coco-640-fp32-onnx:
+    file: yolov8n-coco-640-fp32-onnx.onnx
+    sha256: f6163fa2d72ebdd1805cae17bd0b5a7adc442829007034a8cbc8b40115ea4c3e
+    size_mb: 12.85
+    backend: onnx
+    precision: fp32
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-fp16 tflite-int8
+      --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T11:10:10Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco-640-int8-onnx:
+    file: yolov8n-coco-640-int8-onnx.onnx
+    sha256: 43f284067e2edf8da8b4da97bb6eff80c42b5aba06f6a4be8e4b08b23d7dd6c6
+    size_mb: 3.65
+    backend: onnx
+    precision: int8
+    float_nodes: 47
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    calib: data/splits/coco-calib.txt
+    calib_images: 200
+    made_by: python models/export.py --arch yolov8n --to onnx-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T11:45:42Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco-640-fp16-oak:
+    file: yolov8n-coco-640-fp16-oak.blob
+    sha256: d305887e7e7cb94be094f01e92ba175e84b779f9488842997731223d84d96069
+    size_mb: 6.47
+    backend: oak
+    precision: fp16
+    source: yolov8n-coco-640-fp32-onnx
+    openvino: '2022.1'
+    backend_opts:
+      shaves: 6
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    made_by: python models/compile_oak.py --variant yolov8n-coco-640-fp32-onnx
+    made_at: '2026-11-26T11:11:20Z'
+    versions:
+      python: 3.10.12
+      blobconverter: 1.4.3
+  yolov8n-zoo-640-int8-hailo:
+    file: yolov8n-zoo-640-int8-hailo.hef
+    sha256: cc175c94a8500ea316608b485d66a7dcb43ec0089a25dd774f324c228470de80
+    size_mb: 12.58
+    backend: hailo
+    precision: int8
+    source: https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.17.0/hailo8l/yolov8n.hef
+    hw_arch: hailo8l
+    arch: yolov8n
+    weights: zoo
+    input_size: 640
+    head: hailo_nms
+    classes: coco80
+    made_by: python models/compile_hailo.py --zoo yolov8n
+    made_at: '2026-11-26T11:14:38Z'
+    versions:
+      python: 3.10.12
+  yolov8n-coco-640-fp32-tflite:
+    file: yolov8n-coco-640-fp32-tflite.tflite
+    sha256: bd1e4b355d6e455c80541cf7ac07654ae1efd7b96f4cb3499a74fd8876bde189
+    size_mb: 12.84
+    backend: tflite
+    precision: fp32
+    normalized_boxes: true
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-int8 --calib
+      data/splits/coco-calib.txt
+    made_at: '2026-11-26T11:21:22Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco-640-int8-tflite:
+    file: yolov8n-coco-640-int8-tflite.tflite
+    sha256: 43b7b672d9cd44f2489ab41c2a80d8b1856a95206417d5e8565f0230b1e74c4f
+    size_mb: 3.64
+    backend: tflite
+    precision: int8
+    normalized_boxes: true
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    calib: data/splits/coco-calib.txt
+    calib_images: 200
+    made_by: python models/export.py --arch yolov8n --to tflite-fp32 tflite-int8 --calib
+      data/splits/coco-calib.txt
+    made_at: '2026-11-26T11:21:22Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco-320-fp32-onnx:
+    file: yolov8n-coco-320-fp32-onnx.onnx
+    sha256: 5083fb604e779a1c9d0af76fe7dca7272e9510a2b62f477c876f8eb018e80052
+    size_mb: 12.73
+    backend: onnx
+    precision: fp32
+    arch: yolov8n
+    weights: coco
+    input_size: 320
+    head: yolo
+    classes: coco80
+    made_by: python models/export.py --arch yolov8n --size 320 --to onnx-fp32
+    made_at: '2026-11-26T11:22:20Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco_p51-640-fp32-onnx:
+    file: yolov8n-coco_p51-640-fp32-onnx.onnx
+    sha256: 6b136523a2047595e23e133c966a5d2e1def967f0a1d5e44384370cbe7b94377
+    size_mb: 5.48
+    backend: onnx
+    precision: fp32
+    arch: yolov8n
+    weights: models/files/yolov8n-coco_p51.pt
+    input_size: 640
+    head: yolo
+    classes:
+    - person
+    - bicycle
+    - car
+    - motorcycle
+    - airplane
+    - bus
+    - train
+    - truck
+    - boat
+    - traffic light
+    - fire hydrant
+    - stop sign
+    - parking meter
+    - bench
+    - bird
+    - cat
+    - dog
+    - horse
+    - sheep
+    - cow
+    - elephant
+    - bear
+    - zebra
+    - giraffe
+    - backpack
+    - umbrella
+    - handbag
+    - tie
+    - suitcase
+    - frisbee
+    - skis
+    - snowboard
+    - sports ball
+    - kite
+    - baseball bat
+    - baseball glove
+    - skateboard
+    - surfboard
+    - tennis racket
+    - bottle
+    - wine glass
+    - cup
+    - fork
+    - knife
+    - spoon
+    - bowl
+    - banana
+    - apple
+    - sandwich
+    - orange
+    - broccoli
+    - carrot
+    - hot dog
+    - pizza
+    - donut
+    - cake
+    - chair
+    - couch
+    - potted plant
+    - bed
+    - dining table
+    - toilet
+    - tv
+    - laptop
+    - mouse
+    - remote
+    - keyboard
+    - cell phone
+    - microwave
+    - oven
+    - toaster
+    - sink
+    - refrigerator
+    - book
+    - clock
+    - vase
+    - scissors
+    - teddy bear
+    - hair drier
+    - toothbrush
+    made_by: python models/export.py --arch yolov8n --weights models/files/yolov8n-coco_p51.pt
+      --to onnx-fp32
+    made_at: '2026-11-26T12:36:04Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  yolov8n-coco-640-fp32-tvm_vm:
+    file: yolov8n-coco-640-fp32-tvm_vm.so
+    sha256: c86d513c8fbd875258c0bfd3ab30ffec2ce61d6f161d05346f3147747257037e
+    size_mb: 13.9
+    backend: tvm
+    precision: fp32
+    source: yolov8n-coco-640-fp32-onnx
+    tvm_target: llvm
+    tuned: false
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: yolo
+    classes: coco80
+    made_by: python models/compile_tvm.py --variant yolov8n-coco-640-fp32-onnx --target
+      vm
+    made_at: '2026-11-26T11:26:32Z'
+    versions:
+      python: 3.10.12
+      apache-tvm: 0.27.0.post1
+      onnx: 1.22.0
+  ssdlite-coco-320-fp32-onnx:
+    file: ssdlite-coco-320-fp32-onnx.onnx
+    sha256: 1d50083188da8f195723f1bef365fdd0db70392d8eefc6ae00fac2a64dbb062d
+    size_mb: 13.83
+    backend: onnx
+    precision: fp32
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    anchors: ssdlite-coco-320.anchors.npy
+    classes: coco91
+    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T12:01:55Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  ssdlite-coco-320-int8-onnx:
+    file: ssdlite-coco-320-int8-onnx.onnx
+    sha256: 50069d002f6cb956cac18881dd356c2fe6c9402aea0caafbbffd00d796714749
+    size_mb: 4.25
+    backend: onnx
+    precision: int8
+    float_nodes: 0
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    anchors: ssdlite-coco-320.anchors.npy
+    classes: coco91
+    calib: data/splits/coco-calib.txt
+    calib_images: 200
+    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T12:02:19Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  ssdlite-coco-320-fp32-tflite:
+    file: ssdlite-coco-320-fp32-tflite.tflite
+    sha256: 7d4874b5be364a4f8801117122ce8f57acb3025f89ca6b02571292dba673c3bd
+    size_mb: 13.76
+    backend: tflite
+    precision: fp32
+    normalized_boxes: false
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    anchors: ssdlite-coco-320.anchors.npy
+    classes: coco91
+    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T12:12:50Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  ssdlite-coco-320-fp16-tflite:
+    file: ssdlite-coco-320-fp16-tflite.tflite
+    sha256: 2763cd08c1eee9f69d3dff4613858dd3fa55f27568c6883fa9b39d3e44273405
+    size_mb: 6.93
+    backend: tflite
+    precision: fp16
+    normalized_boxes: false
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    anchors: ssdlite-coco-320.anchors.npy
+    classes: coco91
+    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T12:12:50Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  ssdlite-coco-320-int8-tflite:
+    file: ssdlite-coco-320-int8-tflite.tflite
+    sha256: 992b4f3caf8d7dbd662b5fcf321da5f1093f175beb021d135cb26b23349c5e9f
+    size_mb: 4.14
+    backend: tflite
+    precision: int8
+    normalized_boxes: false
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    anchors: ssdlite-coco-320.anchors.npy
+    classes: coco91
+    calib: data/splits/coco-calib.txt
+    calib_images: 200
+    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
+      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-26T12:12:50Z'
+    versions:
+      python: 3.10.12
+      ultralytics: 8.4.219
+      torch: 2.14.1+cpu
+      torchvision: 0.29.2+cpu
+      onnx: 1.22.0
+      onnxruntime: 1.23.2
+      litert-torch: 0.10.0
+      ai-edge-litert: 2.3.0
+      tensorflow: 2.19.1
+      onnx2tf: 1.28.8
+  ssdlite-coco-320-fp16-oak:
+    file: ssdlite-coco-320-fp16-oak.blob
+    sha256: 9cc02e124838d64dfe350a22d172e0c193bd1494862b9dbc1b98432d16e01ca5
+    size_mb: 12.65
+    backend: oak
+    precision: fp16
+    source: ssdlite-coco-320-fp32-onnx
+    openvino: '2022.1'
+    backend_opts:
+      shaves: 6
+    arch: ssdlite
+    weights: coco
+    input_size: 320
+    head: ssd
+    classes: coco91
+    anchors: ssdlite-coco-320.anchors.npy
+    made_by: python models/compile_oak.py --variant ssdlite-coco-320-fp32-onnx
+    made_at: '2026-11-26T12:13:11Z'
+    versions:
+      python: 3.10.12
+      blobconverter: 1.4.3
+  hsv-red:
+    backend: hsv
+    head: hsv
+    input_size: 0
+    precision: '-'
+    arch: hsv
+    weights: '-'
+    classes:
+    - coke_can
+    note: red mask -> contours; thresholds = hsv_backend defaults
+    made_by: python -c
+    made_at: '2026-11-26T11:41:56Z'
+    versions:
+      python: 3.10.12
+      opencv-python-headless: 5.1.0.95
