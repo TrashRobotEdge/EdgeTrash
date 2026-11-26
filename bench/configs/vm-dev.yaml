@@ -24,4 +24,3 @@ variants:
   - ssdlite-coco-320-fp32-tflite
   - ssdlite-coco-320-int8-tflite
   - hsv-red                             # classical baseline, no model file
-  - yolov8n-coco-640-fp32-tvm_vm

@@ -1,6 +1,6 @@
 """L1 benchmark: one variant, one repetition (Benchmarking p.29-30).
 
-    python bench/run.py --config bench/configs/vm.yaml --variant yolov8n-coco-640-fp32-onnx --rep 0
+    python bench/run.py --config bench/configs/vm-dev.yaml --variant yolov8n-coco-640-fp32-onnx --rep 0
     python bench/run.py --config bench/configs/pi5-cpu.yaml --idle     # idle power/system baseline
 
 Timer (L1 "pipeline latency" without the camera, p.9): frame already decoded in RAM ->
