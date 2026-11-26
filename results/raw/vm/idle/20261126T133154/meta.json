@@ -1,0 +1,47 @@
+{
+  "kind": "idle",
+  "t_start": 1795699854.6532342,
+  "t_end": 1795699914.7182214,
+  "config": {
+    "device": "vm",
+    "label": "Pipeline dry run on the VM (COCO weights, 30 s x 3 reps): checks the code, not a device result",
+    "frames": "data/splits/coco-bench.txt",
+    "n_frames": 100,
+    "warmup_frames": 50,
+    "duration_s": 30,
+    "min_frames": 300,
+    "idle_s": 60,
+    "sample_period_s": 0.5,
+    "reps": 3,
+    "cooldown_s": 10,
+    "governor": "performance",
+    "conf": 0.25,
+    "iou": 0.45,
+    "variants": [
+      "yolov8n-coco-640-fp32-onnx",
+      "yolov8n-coco-640-int8-onnx",
+      "yolov8n-coco-640-fp32-tflite",
+      "yolov8n-coco-640-int8-tflite",
+      "yolov8n-coco_p51-640-fp32-onnx",
+      "yolov8n-coco-320-fp32-onnx",
+      "ssdlite-coco-320-fp32-onnx",
+      "ssdlite-coco-320-int8-onnx",
+      "ssdlite-coco-320-fp32-tflite",
+      "ssdlite-coco-320-int8-tflite",
+      "hsv-red"
+    ]
+  },
+  "meta": {
+    "commit": "f4b7a534b2b16a849603728ffdd84b40356c32e3",
+    "dirty": false,
+    "command": "python /home/vboxuser/Documents/AS-EAI/EdgeTrash/bench/run.py --config bench/configs/vm-dev.yaml --idle",
+    "utc": "2026-11-26T13:31:54Z",
+    "host": "Autonomous-Systems",
+    "machine": "x86_64",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.10.12",
+    "model": null,
+    "governor": null
+  }
+}

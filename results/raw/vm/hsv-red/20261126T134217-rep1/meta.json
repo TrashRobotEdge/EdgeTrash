@@ -1,0 +1,74 @@
+{
+  "kind": "run",
+  "variant": "hsv-red",
+  "rep": 1,
+  "load_s": 0.0608099740002217,
+  "t_steady": 1795700507.8932009,
+  "t_end": 1795700537.8963332,
+  "steady_frames": 6840,
+  "backend": {
+    "runtime": "opencv",
+    "version": "5.1.0",
+    "min_area": 400
+  },
+  "manifest": {
+    "backend": "hsv",
+    "head": "hsv",
+    "input_size": 0,
+    "precision": "-",
+    "arch": "hsv",
+    "weights": "-",
+    "classes": [
+      "coke_can"
+    ],
+    "note": "red mask -> contours; thresholds = hsv_backend defaults",
+    "made_by": "python -c",
+    "made_at": "2026-11-26T11:41:56Z",
+    "versions": {
+      "python": "3.10.12",
+      "opencv-python-headless": "5.1.0.95"
+    }
+  },
+  "config": {
+    "device": "vm",
+    "label": "Pipeline dry run on the VM (COCO weights, 30 s x 3 reps): checks the code, not a device result",
+    "frames": "data/splits/coco-bench.txt",
+    "n_frames": 100,
+    "warmup_frames": 50,
+    "duration_s": 30,
+    "min_frames": 300,
+    "idle_s": 60,
+    "sample_period_s": 0.5,
+    "reps": 3,
+    "cooldown_s": 10,
+    "governor": "performance",
+    "conf": 0.25,
+    "iou": 0.45,
+    "variants": [
+      "yolov8n-coco-640-fp32-onnx",
+      "yolov8n-coco-640-int8-onnx",
+      "yolov8n-coco-640-fp32-tflite",
+      "yolov8n-coco-640-int8-tflite",
+      "yolov8n-coco_p51-640-fp32-onnx",
+      "yolov8n-coco-320-fp32-onnx",
+      "ssdlite-coco-320-fp32-onnx",
+      "ssdlite-coco-320-int8-onnx",
+      "ssdlite-coco-320-fp32-tflite",
+      "ssdlite-coco-320-int8-tflite",
+      "hsv-red"
+    ]
+  },
+  "meta": {
+    "commit": "f4b7a534b2b16a849603728ffdd84b40356c32e3",
+    "dirty": false,
+    "command": "python /home/vboxuser/Documents/AS-EAI/EdgeTrash/bench/run.py --config bench/configs/vm-dev.yaml --variant hsv-red --rep 1",
+    "utc": "2026-11-26T13:42:18Z",
+    "host": "Autonomous-Systems",
+    "machine": "x86_64",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.10.12",
+    "model": null,
+    "governor": null
+  }
+}

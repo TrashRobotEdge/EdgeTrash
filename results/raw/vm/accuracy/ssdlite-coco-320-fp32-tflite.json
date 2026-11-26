@@ -1,0 +1,31 @@
+{
+  "variant": "ssdlite-coco-320-fp32-tflite",
+  "split": "data/splits/coco-eval.txt",
+  "n_images": 500,
+  "map50_95": 0.2103,
+  "map50": 0.3347,
+  "conf": 0.25,
+  "precision": 0.6541,
+  "recall": 0.2517,
+  "f1": 0.3635,
+  "backend": {
+    "runtime": "ai-edge-litert",
+    "version": "2.3.0",
+    "threads": 4,
+    "input_dtype": "<class 'numpy.float32'>",
+    "layout": "nhwc"
+  },
+  "meta": {
+    "commit": "f4b7a534b2b16a849603728ffdd84b40356c32e3",
+    "dirty": false,
+    "command": "python bench/accuracy.py --device vm --variant ssdlite-coco-320-fp32-tflite --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json",
+    "utc": "2026-11-26T13:28:48Z",
+    "host": "Autonomous-Systems",
+    "machine": "x86_64",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.10.12",
+    "model": null,
+    "governor": null
+  }
+}
