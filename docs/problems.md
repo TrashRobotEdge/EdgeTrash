@@ -50,11 +50,13 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Alternatives:** unstructured pruning (no speed-up on dense runtimes) · rewrite C2f without `chunk()` (what torch-pruning's YOLOv8 example does).
 - **Chosen:** `SplitC2f` in `models/common.py`: the first conv split into two convs. Checked to give exactly the same output as the original model (max abs difference 0.0 on a random 640×640 input) before pruning.
 
-### 2026-11-26: typing_extensions conflict on the VM (benchmark kit)
+### 2026-11-26: TVM and the TFLite exporter can't share the VM's environment (benchmark kit)
 - **Symptom:** `import tvm` failed: `cannot import name 'get_annotations' from 'typing_extensions'` (4.12.2 installed).
-- **Diagnosis:** `pip check`: apache-tvm-ffi needs ≥ 4.13, onnx ≥ 4.15, but xdsl (pulled by litert-converter ← litert-torch) declares < 4.13.
-- **Alternatives:** separate venvs for TVM and the TFLite export · pin 4.16.0 and check the export still works.
-- **Chosen:** pin `typing_extensions==4.16.0` in the `models` extra, because a YOLOv8n TFLite export ran fine with it (26/11). Only the VM has both; the Pis don't install litert-torch.
+- **Diagnosis:** `pip check`: apache-tvm-ffi needs typing_extensions ≥ 4.13, while litert-torch → `ai-edge-litert[model-utils]` → `xdsl==0.28.0` needs < 4.13.
+- **First fix, wrong:** pin 4.16.0 because a TFLite export still ran. A clean `setup.sh --config vm-dev` then failed with `ResolutionImpossible`: forcing a version pip refuses isn't reproducible.
+- **Alternatives:** a separate `.venv-tvm` on the VM · compile TVM where it runs.
+- **Chosen:** TVM only on the Pis (`compile_tvm.py --target pi4|pi5`, run on the Pi), because the `.so` is CPU-specific anyway and the Pis never install litert-torch. Before removing it from the VM, checked the TVM backend once against ONNX Runtime on one image: max abs difference 0.0009 on outputs up to 640 px, same 9 detections.
+- **Same cause, second clash:** `onnx 1.22` needs typing_extensions ≥ 4.15 (pip's report: the only other conflict). Pinned `onnx==1.20.1` (needs ≥ 4.7.1), and every model file was re-exported from a venv built by `setup.sh` alone (`bench/dryrun.sh`).
 
 ### 2026-11-26: SSDLite wouldn't compile for the OAK (benchmark kit)
 - **Symptom:** blobconverter: `Failed to compile layer ".../scale_activation/HardSigmoid": unsupported layer type "HardSigmoid"`.

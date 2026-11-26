@@ -2,7 +2,8 @@
 that is the 06/01 lecture, issue #31). Needs a C compiler on the machine that runs it.
 
     python models/compile_tvm.py --variant yolov8n-coco-640-fp32-onnx --target pi5   # run on the Pi itself
-    python models/compile_tvm.py --variant yolov8n-coco-640-fp32-onnx --target vm
+
+On the Pis only: TVM and litert-torch (VM export) can't share one environment (docs/problems.md).
 
 Registers <arch>-<tag>-<size>-fp32-tvm_<target>: the .so only runs on that CPU.
 """
@@ -17,7 +18,6 @@ from common import MODEL_DIR, model_path, register
 from edgetrash.detector import read_manifest
 
 TARGETS = {
-    "vm": "llvm",
     "pi4": "llvm -mtriple=aarch64-linux-gnu -mcpu=cortex-a72",
     "pi5": "llvm -mtriple=aarch64-linux-gnu -mcpu=cortex-a76",
 }

@@ -11,6 +11,6 @@ Variant name = `<arch>-<weights>-<input size>-<precision>-<runtime>`, e.g. `yolo
 | CPU formats | `python models/export.py --arch yolov8n --weights … --to onnx-fp32 onnx-int8 tflite-fp32 tflite-int8 --calib data/splits/<calib>.txt [--size 320]` | ONNX FP32, ORT INT8 (static QDQ), LiteRT FP32 / INT8 (static) |
 | OAK | `python models/compile_oak.py --variant <…-fp32-onnx>` | `.blob` FP16 (Luxonis online converter) |
 | Hailo | `.venv-hailo/bin/python models/compile_hailo.py --variant <…-fp32-onnx> --calib …` · `--zoo yolov8n` for the vendor reference | `.hef` INT8 |
-| TVM | `python models/compile_tvm.py --variant <…-fp32-onnx> --target pi4\|pi5\|vm` (run on that machine) | `.so`, untuned |
+| TVM | `python models/compile_tvm.py --variant <…-fp32-onnx> --target pi4\|pi5` (on that Pi: TVM conflicts with the VM's litert-torch) | `.so`, untuned |
 
 Known gaps (see [docs/problems.md](../docs/problems.md)): no FP16 TFLite for YOLO (Ultralytics' LiteRT exporter has none) · Hailo: no zoo recipe for YOLOv5nu / SSDLite · SSDLite TFLite goes through onnx2tf, not litert-torch.

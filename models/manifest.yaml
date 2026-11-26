@@ -269,27 +269,6 @@ variants:
       ai-edge-litert: 2.3.0
       tensorflow: 2.19.1
       onnx2tf: 1.28.8
-  yolov8n-coco-640-fp32-tvm_vm:
-    file: yolov8n-coco-640-fp32-tvm_vm.so
-    sha256: c86d513c8fbd875258c0bfd3ab30ffec2ce61d6f161d05346f3147747257037e
-    size_mb: 13.9
-    backend: tvm
-    precision: fp32
-    source: yolov8n-coco-640-fp32-onnx
-    tvm_target: llvm
-    tuned: false
-    arch: yolov8n
-    weights: coco
-    input_size: 640
-    head: yolo
-    classes: coco80
-    made_by: python models/compile_tvm.py --variant yolov8n-coco-640-fp32-onnx --target
-      vm
-    made_at: '2026-11-26T11:26:32Z'
-    versions:
-      python: 3.10.12
-      apache-tvm: 0.27.0.post1
-      onnx: 1.22.0
   ssdlite-coco-320-fp32-onnx:
     file: ssdlite-coco-320-fp32-onnx.onnx
     sha256: 1d50083188da8f195723f1bef365fdd0db70392d8eefc6ae00fac2a64dbb062d

@@ -8,7 +8,7 @@
 | `pi5-cpu` | Pi 5 | same | board is a Pi 5, Trixie |
 | `pi5-hailo` | Pi 5 + Hailo-8L | `hailo-all` (apt, HailoRT 4.23.0), venv sees its Python binding | `hailortcli fw-control identify`, PCIe link |
 | `oak` | any Pi with the OAK-D Pro | DepthAI 3.12.2 + udev rule | OAK found, USB 3 (5000M) |
-| `vm-dev` | VM / laptop | training + export + compile tools, pre-commit | asks to download COCO val2017 (1 GB) for the dry run |
+| `vm-dev` | VM / laptop | training + export + compile tools (not TVM: compiled on the Pis), pre-commit | asks to download COCO val2017 (1 GB) for the dry run |
 | `vm-hailo` | VM / laptop | Hailo Dataflow Compiler 3.33.0 + Model Zoo v2.17 in `.venv-hailo` | needs the DFC wheel (below) |
 
 ## Class day runbook (Pi)

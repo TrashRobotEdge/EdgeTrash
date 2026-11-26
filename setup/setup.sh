@@ -41,7 +41,7 @@ pick_config() {
   select CONFIG in "${CONFIGS[@]}"; do [[ -n "$CONFIG" ]] && break; done
 }
 
-board() { tr -d '\0' < /proc/device-tree/model 2>/dev/null || echo "not a Raspberry Pi"; }
+board() { { tr -d '\0' < /proc/device-tree/model; } 2>/dev/null || echo "not a Raspberry Pi"; }
 
 check_board() {  # $1 = "4" or "5": refuse to set up a Pi 5 config on a Pi 4 by mistake
   board | grep -q "Raspberry Pi $1" || die "this config is for a Raspberry Pi $1, this machine is: $(board)"
@@ -142,7 +142,7 @@ vm_dev() {
   need_venv
   apt_install python3-dev
   make_venv "$REPO/.venv"
-  pip_extras "models,onnx,tflite,tvm,oak,bench,dev" --extra-index-url "$TORCH_INDEX"
+  pip_extras "models,onnx,tflite,oak,bench,dev" --extra-index-url "$TORCH_INDEX"  # no tvm: conflicts with litert-torch
   (cd "$REPO" && .venv/bin/pre-commit install >/dev/null && ok "pre-commit hook installed")
   if [[ ! -d "$REPO/data/coco/val2017" ]]; then
     local yn=y; [[ $YES == 1 ]] || read -r -p "  Download COCO val2017 (1 GB) for the dry run? [y/N] " yn
