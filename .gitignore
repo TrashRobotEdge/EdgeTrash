@@ -33,3 +33,10 @@ report/*.synctex.gz
 *Zone.Identifier
 .DS_Store
 .vscode/
+# benchmark kit: data, models and training runs stay local
+data/coco/
+models/files/
+runs/
+*.npy
+*.so
+*.pt

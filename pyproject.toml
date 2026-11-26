@@ -4,10 +4,60 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "edgetrash"
-version = "0.0.1"
+version = "0.1.0"
 description = "ROS-free trash detection pipeline (preprocess, infer, postprocess) with per-stage timing, shared by the benchmark and the robot."
-requires-python = ">=3.10"   # Pi4 on Ubuntu 22.04 ships 3.10
-dependencies = []            # added per backend when chosen (S1), with pinned versions
+# Pis: Raspberry Pi OS Trixie = Python 3.13. VM: Ubuntu 22.04 = Python 3.10.
+# Every pin below has wheels for both (checked on PyPI, 26/11/2026).
+requires-python = ">=3.10"
+dependencies = [
+    "numpy==2.1.3",                      # tensorflow 2.19 (VM export) caps numpy: same pin everywhere
+    "opencv-python-headless==5.1.0.95",  # same version as the opencv-python ultralytics pulls in on the VM
+    "pyyaml==6.0.4",
+    "psutil==7.2.2",
+]
+
+[project.optional-dependencies]
+onnx = ["onnxruntime==1.23.2"]
+tflite = ["ai-edge-litert==2.3.0"]  # 2.3.0: what litert-torch (VM export) needs, same on the Pis
+oak = ["depthai==3.12.2"]
+tvm = ["apache-tvm==0.27.0.post1"]
+# hailo: no pip package, HailoRT 4.23.0 comes from apt (python3-hailort) on Raspberry Pi OS
+bench = ["pandas==2.3.3", "matplotlib==3.10.9", "pycocotools==2.0.11", "streamlit==1.65.0"]
+# VM / laptop only: training, export, compilation
+models = [
+    "torch==2.14.1",          # CPU wheels: --extra-index-url https://download.pytorch.org/whl/cpu
+    "torchvision==0.29.2",
+    "ultralytics==8.4.219",
+    "opencv-python==5.1.0.95",
+    "onnx==1.22.0",
+    "onnxslim==0.1.99",
+    "torch-pruning==1.6.1",
+    "litert-torch==0.10.0",   # Ultralytics' TFLite exporter
+    "ai-edge-quantizer==0.10.1",
+    "torchao==0.18.0",
+    "jax==0.6.2",
+    "tensorflow==2.19.1",     # onnx2tf (SSDLite -> TFLite)
+    "tf_keras==2.19.0",
+    "onnx2tf==1.28.8",
+    "sng4onnx==2.0.1",
+    "onnx_graphsurgeon==0.6.1",
+    "blobconverter==1.4.3",
+    "typing_extensions==4.16.0",  # tvm-ffi needs >= 4.13; xdsl (via litert-torch) declares < 4.13 but works (docs/problems.md)
+]
+dev = ["pytest==9.2.0", "ruff==0.17.6", "pre-commit==4.6.2"]
 
 [tool.setuptools]
-packages = ["edgetrash"]
+packages = ["edgetrash", "edgetrash.backends"]
+
+[tool.ruff]
+line-length = 140
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["edgetrash", "common", "pruning", "ssdlite", "run", "meta", "power", "monitor", "sweep"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
