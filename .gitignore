@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-hailo/
 build/
 dist/
 # large artefacts: GitHub Releases / shared drive, never git
@@ -40,3 +41,8 @@ runs/
 *.npy
 *.so
 *.pt
+
+# Hailo SDK writes its logs into the working folder
+acceleras.log
+hailo_sdk.*.log
+allocator.log
