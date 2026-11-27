@@ -1,0 +1,29 @@
+{
+  "variant": "yolov8n-coco-640-int8-onnx",
+  "split": "data/splits/coco-eval.txt",
+  "n_images": 500,
+  "map50_95": 0.3504,
+  "map50": 0.5013,
+  "conf": 0.25,
+  "precision": 0.699,
+  "recall": 0.4624,
+  "f1": 0.5566,
+  "backend": {
+    "runtime": "onnxruntime",
+    "version": "1.23.2",
+    "threads": 4
+  },
+  "meta": {
+    "commit": "f4b7a534b2b16a849603728ffdd84b40356c32e3",
+    "dirty": false,
+    "command": "python bench/accuracy.py --device vm --variant yolov8n-coco-640-int8-onnx --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json",
+    "utc": "2026-11-26T13:20:14Z",
+    "host": "Autonomous-Systems",
+    "machine": "x86_64",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.10.12",
+    "model": null,
+    "governor": null
+  }
+}

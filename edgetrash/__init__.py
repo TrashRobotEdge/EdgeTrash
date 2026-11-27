@@ -1,14 +1,16 @@
 """edgetrash: ROS-free trash detection pipeline.
 
-Contract (to implement in S1): every backend (hsv, onnx, tflite, hailo, oak, tvm)
-exposes the same three stages, each timed with time.perf_counter:
+Every backend runs the same three stages, each timed with time.perf_counter:
 
-    preprocess(frame)  -> input tensor
-    infer(tensor)      -> raw outputs
-    postprocess(raw)   -> list of detections (class, score, bbox in pixels)
+    preprocess(frame) -> input tensor      (shared letterbox, edgetrash.preprocess)
+    infer(tensor)     -> raw outputs       (one file per backend, edgetrash.backends)
+    postprocess(raw)  -> detections        (shared decoders + NMS, edgetrash.postprocess)
 
 The same code runs in the L1 benchmark (bench/) and in TrashLocalisation's
 trash_detector ROS node, so what we measure is what runs on the robot.
 """
 
-__version__ = "0.0.1"
+from edgetrash.detector import Detection, Detector, load_variant
+
+__version__ = "0.1.0"
+__all__ = ["Detection", "Detector", "load_variant"]

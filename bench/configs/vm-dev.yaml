@@ -1,0 +1,26 @@
+device: vm
+label: "Pipeline dry run on the VM (COCO weights, 30 s x 3 reps): checks the code, not a device result"
+frames: data/splits/coco-bench.txt   # replayed frames, same list on every device (dry run: COCO; then our OAK captures)
+n_frames: 100
+warmup_frames: 50                    # discarded from stats, kept in frames.csv (protocol step 6)
+duration_s: 30                 # steady state, at least...
+min_frames: 300                      # ...and at least this many frames
+idle_s: 60
+sample_period_s: 0.5                 # system monitor / PMIC
+reps: 3
+cooldown_s: 10
+governor: performance
+conf: 0.25                           # operating threshold (protocol step 4)
+iou: 0.45
+variants:
+  - yolov8n-coco-640-fp32-onnx
+  - yolov8n-coco-640-int8-onnx
+  - yolov8n-coco-640-fp32-tflite
+  - yolov8n-coco-640-int8-tflite
+  - yolov8n-coco_p51-640-fp32-onnx      # pruned: 51 % of MACs removed (models/prune.py --target 0.5)
+  - yolov8n-coco-320-fp32-onnx          # input size factor
+  - ssdlite-coco-320-fp32-onnx
+  - ssdlite-coco-320-int8-onnx
+  - ssdlite-coco-320-fp32-tflite
+  - ssdlite-coco-320-int8-tflite
+  - hsv-red                             # classical baseline, no model file

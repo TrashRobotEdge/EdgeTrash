@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .venv/
+.venv-hailo/
 build/
 dist/
 # large artefacts: GitHub Releases / shared drive, never git
@@ -33,3 +34,15 @@ report/*.synctex.gz
 *Zone.Identifier
 .DS_Store
 .vscode/
+# benchmark kit: data, models and training runs stay local
+data/coco/
+models/files/
+runs/
+*.npy
+*.so
+*.pt
+
+# Hailo SDK writes its logs into the working folder
+acceleras.log
+hailo_sdk.*.log
+allocator.log
