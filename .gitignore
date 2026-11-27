@@ -13,14 +13,14 @@ dist/
 *.hef
 *.har
 *.blob
-*.engine
 data/raw/
 data/images/
 data/labels/
 bags/
 *.db3
 *.mcap
-# LaTeX build files (the final PDF is committed on purpose)
+# LaTeX build files, PDF included: latexmk rebuilds it, the hand-in PDF goes to a Release
+report/*.pdf
 report/*.aux
 report/*.log
 report/*.out
@@ -38,9 +38,9 @@ report/*.synctex.gz
 data/coco/
 models/files/
 runs/
+edgetrash-bundle.tar
 *.npy
 *.so
-*.pt
 
 # Hailo SDK writes its logs into the working folder
 acceleras.log

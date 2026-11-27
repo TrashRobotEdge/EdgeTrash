@@ -106,7 +106,7 @@ Numbers marked *(one-off check)* come from one interactive check, with no script
 - **Chosen:** `compile_hailo.py` reads the 6 convs (`/model.N/cv2|cv3.<scale>/…2/Conv`) from the ONNX and passes `--end-node-names`, same order as the yolov11 recipes. Works for YOLOv8n and YOLO11n without hardcoding the layer index.
 - **Also seen:** on a VM without GPU and with fewer than 1024 calibration images (we link 200, the DFC uses 64: its default `calibset_size`), the DFC drops to **optimization level 0** (no accuracy recovery, no compression) and the compiler isn't at its "max" performance setting. Our `.hef` may lose more accuracy and run slower than Hailo's zoo `.hef`: measure both on the Pi before comparing. `compile_hailo.py` now records the level in the manifest. Two compiles of the same ONNX gave different `.hef` checksums (32 min each): the manifest checksum, not a rebuild, is what ties a result to its file.
 
-### 2026-11-27: model rebuilds gave new checksums (benchmark kit, issue #20)
+### 2026-11-27: model rebuilds gave new checksums (benchmark kit)
 - **Symptom:** rebuilding a YOLO variant from the same weights changed its sha256, so the manifest changed and two teammates' builds clashed.
 - **Diagnosis:** Ultralytics stamps the export time into every file: a `date` entry in the ONNX metadata, a `metadata.json` zip appended to the `.tflite`. Without them, two rebuilds of `yolov8n-coco-640` FP32 ONNX, INT8 ONNX and FP32 TFLite are byte-identical (checked 27/11 in a scratch clone).
 - **Chosen:** `export.py` drops both after export (edgetrash never reads them), and `register()` leaves a manifest entry untouched when file, command and versions are the same.
