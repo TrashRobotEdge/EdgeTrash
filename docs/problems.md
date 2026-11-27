@@ -32,7 +32,7 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Diagnosis:** `~/.bashrc` sources ROS, which sets `PYTHONPATH`; a venv doesn't clear it.
 - **Chosen:** `setup/setup.sh` runs with `PYTHONPATH=""`. On the robot, ROS stays in its own container (ADR 0001).
 
-### 2026-11-26: Hailo compiler not available yet (benchmark kit, issue #43)
+### 2026-11-26: Hailo compiler not available yet (benchmark kit, issue #43). Solved 26/11: DFC 3.33.0 installed
 - **Symptom:** we can't build our own `.hef`.
 - **Diagnosis:** the Dataflow Compiler is behind a Hailo Developer Zone login (registration in progress). It must be **DFC 3.33.0**: Hailo Model Zoo v2.17's changelog pairs it with HailoRT 4.23.0, the version Raspberry Pi OS Trixie ships. Hailo also recommends ≥ 16 GB RAM for the DFC; the VM has 12 GB (to see if it's enough for a nano model).
 - **Alternatives:** wait · Hailo's pre-compiled zoo `.hef` · compile on a teammate's bigger machine.
@@ -97,3 +97,9 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Diagnosis:** the zoo's `setup.py` checks the DFC is installed, but pip builds it in an isolated environment that can't see it. Then our own `opencv-python-headless==5.1.0.95` pulled numpy 2.x.
 - **Then:** the first compile failed: `yolov8n_nms_config.json` missing. A pip install from the git URL leaves out the zoo's `postprocess_config/`.
 - **Chosen:** Hailo's documented install: clone the zoo (tag v2.17) into `.venv-hailo/src/`, install the DFC first, then the zoo with `pip install --no-build-isolation -e` (needs setuptools ≥ 64; Ubuntu 22.04 venvs ship 59.6, so we pin 75.8.0). No extra OpenCV in `.venv-hailo` (the zoo brings 4.11). `setup.sh` now imports `cv2`, `numpy`, `yaml`, `hailo_sdk_client` at the end and stops if one fails. Checked by deleting `.venv-hailo` and rebuilding it from scratch.
+
+### 2026-11-26: Hailo compile of our YOLOv8n stopped at the model's last layers (benchmark kit, issue #43)
+- **Symptom:** `hailomz compile yolov8n` on our ONNX: "Error in the last layers of the model, expected conv but found concat layer".
+- **Diagnosis:** the zoo's yolov8n recipe names no end nodes, so the parser guesses them. On Hailo's own 2023 ONNX the guess works; on our Ultralytics 8.4 export it picked `/model.22/Concat` + `Sigmoid` (the decode tail) instead of the head's 6 last convs, where Hailo's on-chip NMS expects to start. The zoo's yolov11 recipes list those 6 convs explicitly.
+- **Chosen:** `compile_hailo.py` reads the 6 convs (`/model.N/cv2|cv3.<scale>/…2/Conv`) from the ONNX and passes `--end-node-names`, same order as the yolov11 recipes. Works for YOLOv8n and YOLO11n without hardcoding the layer index.
+- **Also seen:** on a VM without GPU and with our 200 calibration images (< 1024), the DFC drops to **optimization level 0** (no accuracy recovery, no compression) and the compiler isn't at its "max" performance setting. Our `.hef` may lose more accuracy and run slower than Hailo's zoo `.hef`: measure both on the Pi before comparing, and record the levels with the results.

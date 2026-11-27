@@ -10,6 +10,7 @@ architectures the zoo knows are accepted. Registers <arch>-<tag>-<size>-int8-hai
 """
 
 import argparse
+import re
 import shutil
 import subprocess
 import sys
@@ -22,7 +23,21 @@ from edgetrash.detector import read_manifest
 
 ZOO_NAME = {"yolov8n": "yolov8n", "yolo11n": "yolov11n"}  # yolov5nu / ssdlite: no zoo recipe (docs/problems.md)
 CALIB_LIMIT = 200
+HEAD_CONV = re.compile(r"/model\.\d+/(cv[23])\.(\d)/cv[23]\.\d\.2/Conv")
 ZOO_URL = "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.17.0/{hw}/{name}.hef"  # Model Zoo v2.17 docs
+
+
+def head_convs(onnx_file: Path) -> list[str]:
+    """The Detect head's 6 last convs (box + class per scale), where Hailo's NMS takes over.
+    The yolov8n recipe names none and the parser's guess fails on current Ultralytics exports
+    (docs/problems.md); the yolov11 recipes list these same 6."""
+    import onnx
+
+    names = [n.name for n in onnx.load(str(onnx_file)).graph.node if n.op_type == "Conv"]
+    convs = sorted((m.group(2), m.group(1), n) for n in names if (m := HEAD_CONV.fullmatch(n)))
+    if len(convs) != 6:
+        raise SystemExit(f"{onnx_file.name}: expected 6 head convs, found {[c[2] for c in convs]}")
+    return [n for _, _, n in convs]  # per scale: box (cv2) then class (cv3)
 
 
 def fetch_zoo(arch: str, hw: str) -> None:
@@ -82,6 +97,8 @@ def main():
             str(calib_dir),
             "--classes",
             str(n_classes),
+            "--end-node-names",
+            *head_convs(MODEL_DIR / v["file"]),
         ]
         print(" ".join(cmd))
         subprocess.run(cmd, cwd=tmp, check=True)
