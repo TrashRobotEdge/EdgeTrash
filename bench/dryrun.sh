@@ -20,7 +20,7 @@ $PY models/compile_oak.py --variant ssdlite-coco-320-fp32-onnx
 $PY models/compile_hailo.py --zoo yolov8n
 elif [[ "${1:-}" == measure ]]; then  # accuracy on 500 COCO images, then latency (idle + variants x reps, interleaved)
 for v in $(grep -E '^\s+- ' bench/configs/vm-dev.yaml | awk '{print $2}' | grep -v '^hsv-'); do
-  $PY bench/accuracy.py --device vm --variant "$v" --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json
+  $PY bench/accuracy.py --device vm --variant "$v" --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
 done
 $PY bench/sweep.py --config bench/configs/vm-dev.yaml
 $PY bench/analyze.py

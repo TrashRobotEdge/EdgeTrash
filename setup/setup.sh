@@ -152,7 +152,8 @@ vm_dev() {
     fi
   fi
   if [[ -d "$REPO/data/coco/val2017" ]]; then
-    (cd "$REPO" && .venv/bin/python data/coco_splits.py >/dev/null && ok "COCO splits written")
+    (cd "$REPO" && .venv/bin/python data/coco_splits.py >/dev/null && .venv/bin/python data/coco_eval.py make >/dev/null &&
+      ok "COCO splits + eval annotation subset written")
   fi
 }
 

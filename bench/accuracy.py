@@ -1,7 +1,7 @@
 """Accuracy of one variant, measured on the device's own output (Benchmarking p.8, p.31).
 
     python bench/accuracy.py --device vm --variant yolov8n-coco-640-fp32-onnx \
-        --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json
+        --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
 
 Writes results/raw/<device>/accuracy/<variant>.json: mAP@0.5:0.95, mAP@0.5 (COCO tools, conf 0.001),
 and precision / recall / F1 at the operating threshold (--conf, IoU 0.5).

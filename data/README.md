@@ -13,4 +13,4 @@
 - **Licence / consent:** our own photos, no faces. Licence of any public data checked before use
 
 ## COCO dry run (until our data exists)
-`bash setup/setup.sh --config vm-dev` downloads COCO val2017 into `data/coco/` (ignored) and runs `python data/coco_splits.py`: 500 eval, 200 calibration (disjoint), 100 bench frames, seed 0. COCO terms (cocodataset.org): annotations CC BY 4.0, images under the Flickr terms of use. Used only to test the pipeline, never redistributed (not in git, not in releases).
+`bash setup/setup.sh --config vm-dev` downloads COCO val2017 into `data/coco/` (ignored) and runs `python data/coco_splits.py`: 500 eval, 200 calibration (disjoint), 100 bench frames (first 100 of eval), seed 0. `data/coco_eval.py make` writes the eval annotation subset (with each image's URL + sha256); on a Pi, `data/coco_eval.py fetch` downloads the images. COCO terms (cocodataset.org): annotations CC BY 4.0, images under the Flickr terms of use. Used only to test the pipeline, images never redistributed (not in git, releases or the USB bundle; the bundle carries only the annotation subset).
