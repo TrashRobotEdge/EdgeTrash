@@ -4,7 +4,8 @@
     python bench/analyze.py --meter meter.csv       # add the inline meter (columns t_unix,watts)
 
 Writes results/summary.csv (one row per device x variant: median over repetitions + IQR),
-results/accuracy.csv (mAP, drop vs FP32, quality gate) and results/figures/*.png.
+results/accuracy.csv (mAP, drop vs FP32, quality gate), results/stability.csv (R8: run.py --duration-s,
+p95 of the first vs last 5 min) and results/figures/*.png.
 """
 
 import argparse
@@ -49,15 +50,12 @@ plt.rcParams.update(
 )
 
 
-def window_mean(df: pd.DataFrame, col: str, t0: float, t1: float):
-    if col not in df:
+def window(df: pd.DataFrame | None, col: str, t0: float, t1: float, how: str = "mean"):
+    """Mean (or max) of one column between t0 and t1. None if the column or the window is empty."""
+    if df is None or col not in df:
         return None
-    w = df[(df.t_unix >= t0) & (df.t_unix <= t1)][col]
-    return float(w.mean()) if len(w) else None
-
-
-def meter_mean(meter: pd.DataFrame | None, t0: float, t1: float):
-    return None if meter is None else window_mean(meter, "watts", t0, t1)
+    w = df[(df.t_unix >= t0) & (df.t_unix <= t1)][col].dropna()
+    return float(w.agg(how)) if len(w) else None
 
 
 def idle_power(device_dir: Path, meter: pd.DataFrame | None) -> dict:
@@ -67,7 +65,7 @@ def idle_power(device_dir: Path, meter: pd.DataFrame | None) -> dict:
         return {}
     m = json.loads(runs[-1].read_text())
     sys_df = pd.read_csv(runs[-1].parent / "system.csv")
-    return {"pmic_w": window_mean(sys_df, "pmic_w", m["t_start"], m["t_end"]), "meter_w": meter_mean(meter, m["t_start"], m["t_end"])}
+    return {"pmic_w": window(sys_df, "pmic_w", m["t_start"], m["t_end"]), "meter_w": window(meter, "watts", m["t_start"], m["t_end"])}
 
 
 def per_run(run_dir: Path, idle: dict, meter: pd.DataFrame | None) -> tuple[dict, pd.Series]:
@@ -81,6 +79,7 @@ def per_run(run_dir: Path, idle: dict, meter: pd.DataFrame | None) -> tuple[dict
         "device": m["config"]["device"],
         "variant": m["variant"],
         "rep": m["rep"],
+        "kind": m.get("kind", "run"),
         "frames": n,
         "p50_ms": steady.total_ms.quantile(0.50),
         "p95_ms": steady.total_ms.quantile(0.95),
@@ -90,17 +89,34 @@ def per_run(run_dir: Path, idle: dict, meter: pd.DataFrame | None) -> tuple[dict
         "post_p50_ms": steady.post_ms.median(),
         "fps": n / (t1 - t0),
         "load_s": m["load_s"],
-        "cpu_pct": window_mean(sys_df, "cpu_pct", t0, t1),
+        "cpu_pct": window(sys_df, "cpu_pct", t0, t1),
         "rss_peak_mb": float(sys_df.rss_mb.max()),
         "temp_max_c": float(sys_df.temp_c.max()) if sys_df.temp_c.notna().any() else None,
         "throttled": ",".join(flags) or None,
     }
-    for src, active in {"pmic": window_mean(sys_df, "pmic_w", t0, t1), "meter": meter_mean(meter, t0, t1)}.items():
+    for src, df, col in (("pmic", sys_df, "pmic_w"), ("meter", meter, "watts")):
+        active = window(df, col, t0, t1)
         if active is not None:
             row[f"{src}_w"] = active
+            row[f"{src}_peak_w"] = window(df, col, t0, t1, "max")  # p.7, p.25: average and peak
             if idle.get(f"{src}_w") is not None:  # E/inference = (P - P_idle) * T / N (p.25)
                 row[f"{src}_mj_per_inf"] = (active - idle[f"{src}_w"]) * (t1 - t0) / n * 1e3
     return row, steady.total_ms
+
+
+def stability(run_dir: Path, row: dict) -> dict:
+    """R8: does p95 drift over a long run? First vs last 5 min of the steady state."""
+    frames = pd.read_csv(run_dir / "frames.csv")
+    steady = frames[~frames.warmup]
+    t = steady.t_unix - steady.t_unix.iloc[0]
+    first, last = steady.total_ms[t < 300].quantile(0.95), steady.total_ms[t > t.iloc[-1] - 300].quantile(0.95)
+    return {
+        **{k: row[k] for k in ("device", "variant", "throttled", "temp_max_c")},
+        "minutes": round(t.iloc[-1] / 60, 1),
+        "p95_first5_ms": first,
+        "p95_last5_ms": last,
+        "p95_drift_pct": 100 * (last - first) / first,
+    }
 
 
 def iqr(s: pd.Series) -> float:
@@ -270,16 +286,21 @@ def main():
     meter = load_meter_csv(args.meter) if args.meter else None
     FIG.mkdir(parents=True, exist_ok=True)
 
-    rows, samples, labels = [], {}, {}
+    rows, long_runs, samples, labels = [], [], {}, {}
     for device_dir in sorted(p for p in RAW.iterdir() if p.is_dir() and (not args.device or p.name == args.device)):
         idle = idle_power(device_dir, meter)
         for meta in sorted(device_dir.glob("*/*/meta.json")):
             if meta.parent.parent.name in ("idle", "accuracy"):
                 continue
             row, total = per_run(meta.parent, idle, meter)
+            if row.pop("kind") == "stability":  # not a repetition: kept out of the medians
+                long_runs.append(stability(meta.parent, row))
+                continue
             rows.append(row)
             samples.setdefault(row["device"], {}).setdefault(row["variant"], []).extend(total)
             labels[row["device"]] = json.loads(meta.read_text())["config"].get("label")
+    if long_runs:
+        pd.DataFrame(long_runs).to_csv(OUT / "stability.csv", index=False, float_format="%.3f")
     acc = accuracy_table()
     if not acc.empty:
         acc.to_csv(OUT / "accuracy.csv", index=False)

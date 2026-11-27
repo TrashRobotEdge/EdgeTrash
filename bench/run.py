@@ -2,12 +2,13 @@
 
     python bench/run.py --config bench/configs/vm-dev.yaml --variant yolov8n-coco-640-fp32-onnx --rep 0
     python bench/run.py --config bench/configs/pi5-cpu.yaml --idle     # idle power/system baseline
+    python bench/run.py --config bench/configs/pi5-cpu.yaml --variant <v> --duration-s 1800   # stability (R8)
 
 Timer (L1 "pipeline latency" without the camera, p.9): frame already decoded in RAM ->
 detections in frame pixels. Frames are replayed from a fixed list, the same on every device.
 Single stream, batch 1, no overlap: throughput = 1 / latency.
 
-Writes results/raw/<device>/<variant>/<utc>-rep<k>/ : frames.csv (every frame, warm-up
+Writes results/raw/<device>/<variant>/<utc>-rep<k>/ (or <utc>-stability/): frames.csv (every frame, warm-up
 flagged), system.csv (monitor), meta.json (versions, config, manifest entry, commit).
 """
 
@@ -45,9 +46,9 @@ def load_frames(cfg: dict) -> list:
     return frames
 
 
-def out_dir(device: str, name: str, rep: int | None) -> Path:
+def out_dir(device: str, name: str, suffix: str = "") -> Path:
     stamp = time.strftime("%Y%m%dT%H%M%S", time.gmtime())
-    d = RAW / device / name / (f"{stamp}-rep{rep}" if rep is not None else stamp)
+    d = RAW / device / name / f"{stamp}{suffix}"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
@@ -59,14 +60,14 @@ def run_idle(cfg: dict) -> Path:
     mon.start()
     time.sleep(cfg.get("idle_s", 60))
     rows = mon.stop()
-    d = out_dir(cfg["device"], "idle", None)
+    d = out_dir(cfg["device"], "idle")
     pd.DataFrame(rows).to_csv(d / "system.csv", index=False)
     meta = {"kind": "idle", "t_start": t0, "t_end": time.time(), "config": cfg, "meta": run_meta()}
     (d / "meta.json").write_text(json.dumps(meta, indent=2))
     return d
 
 
-def run_variant(cfg: dict, variant: str, rep: int | None) -> Path:
+def run_variant(cfg: dict, variant: str, rep: int | None, kind: str = "run") -> Path:
     frames = load_frames(cfg)
     t_load = time.perf_counter()
     det = load_variant(variant, conf=cfg.get("conf", 0.25), iou=cfg.get("iou", 0.45))
@@ -100,11 +101,12 @@ def run_variant(cfg: dict, variant: str, rep: int | None) -> Path:
     t_end = time.time()
     sys_rows = mon.stop()
 
-    d = out_dir(cfg["device"], variant, rep)
+    suffix = f"-{kind}" if kind != "run" else ("" if rep is None else f"-rep{rep}")
+    d = out_dir(cfg["device"], variant, suffix)
     pd.DataFrame(rows).to_csv(d / "frames.csv", index=False)
     pd.DataFrame(sys_rows).to_csv(d / "system.csv", index=False)
     meta = {
-        "kind": "run",
+        "kind": kind,
         "variant": variant,
         "rep": rep,
         "load_s": load_s,
@@ -118,8 +120,9 @@ def run_variant(cfg: dict, variant: str, rep: int | None) -> Path:
     }
     (d / "meta.json").write_text(json.dumps(meta, indent=2, default=str))
     steady = pd.DataFrame(rows[warmup:])["total_ms"]
+    label = f"rep {rep}" if kind == "run" else kind
     print(
-        f"{variant} rep {rep}: p50 {steady.quantile(0.5):.1f} ms  p95 {steady.quantile(0.95):.1f} ms  "
+        f"{variant} {label}: p50 {steady.quantile(0.5):.1f} ms  p95 {steady.quantile(0.95):.1f} ms  "
         f"({len(steady)} frames) -> {d.relative_to(REPO)}"
     )
     return d
@@ -131,15 +134,18 @@ def main():
     ap.add_argument("--variant")
     ap.add_argument("--rep", type=int)
     ap.add_argument("--idle", action="store_true")
+    ap.add_argument("--duration-s", type=float, help="stability run (R8): this many seconds of steady state, kept out of the rep medians")
     args = ap.parse_args()
     cfg = load_config(args.config)
+    if args.duration_s:
+        cfg["duration_s"] = args.duration_s
     governor = run_meta()["governor"]
     if cfg.get("governor") and governor not in (None, cfg["governor"]):
         print(f"WARNING: CPU governor is {governor}, protocol says {cfg['governor']}: run setup/setup.sh")
     if args.idle:
         print(f"idle -> {run_idle(cfg).relative_to(REPO)}")
     elif args.variant:
-        run_variant(cfg, args.variant, args.rep)
+        run_variant(cfg, args.variant, args.rep, "stability" if args.duration_s else "run")
     else:
         ap.error("give --variant or --idle")
 

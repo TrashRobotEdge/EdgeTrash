@@ -46,7 +46,7 @@ We produce abacuses that link a config (model × optimisation × device) to late
 ## 3. Variables (p.24)
 | Fixed | Varied | Measured |
 |---|---|---|
-| OS image (D10), runtime versions (`pyproject.toml`), batch 1, frames, calibration set, power supply, cooling, governor = performance, room, cable/port | **architecture** (D6) · **precision** FP32 / FP16 / INT8 · **pruning** 0 % vs ~50 % MACs · **input size** 640 (main), 320 · **toolchain** · **device** | latency (per stage), FPS, power, energy / inference, peak RSS, load time, CPU %, temperature, throttling, accuracy, model size, % ops on the accelerator |
+| OS image (D10), runtime versions (`pyproject.toml`), batch 1, frames, calibration set, power supply, cooling, governor = performance, room, cable/port | **architecture** (D6) · **precision** FP32 / FP16 / INT8 · **pruning** 0 % vs ~50 % MACs · **input size** 640 (main), 320 · **toolchain** · **device** | latency (per stage), FPS, power, energy / inference, peak RSS, load time, CPU %, temperature, throttling, accuracy, model size, % ops on the accelerator (from the compile logs, not a run: Hailo `hailortcli parse-hef` + its NMS on the CPU, OAK blob compile log) |
 
 **Order (p.24):** one factor at a time on a reference config, then cross the factors that matter.
 
@@ -87,11 +87,11 @@ Per device: `python bench/sweep.py --config bench/configs/<device>.yaml`.
 2. Each variant in a **fresh process**: load (timed), **50 warm-up frames** (kept in the CSV, flagged, excluded from stats), then **≥ 60 s and ≥ 300 frames** steady. Every frame kept.
 3. **5 repetitions**, variants **interleaved** in a new random order each repetition (seed = rep), 10 s cool-down between runs (p.28, p.31).
 4. Accuracy of each variant on its device: `python bench/accuracy.py --device <device> --variant <v> ...` (p.31 "verify outputs on target").
-5. Stability (R8): one 30–60 min run of the chosen config.
+5. Stability (R8): one 30–60 min run of the chosen config: `python bench/run.py --config … --variant <v> --duration-s 1800`. Kept out of the rep medians; `analyze.py` writes `results/stability.csv` (p95 first vs last 5 min, throttling).
 
 ## 7. Analyze (p.31, p.34)
 `python bench/analyze.py` regenerates everything from `results/raw/`:
-- Per config: **median over the 5 repetitions** of each run's p50 / p95 / p99, FPS and energy, with the **IQR** (p.31).
+- Per config: **median over the 5 repetitions** of each run's p50 / p95 / p99, FPS, power (average and peak, p.7, p.25) and energy, with the **IQR** (p.31).
 - **Quality gate** D4 applied in `results/accuracy.csv`; configs below it are flagged, not hidden.
 - Figures: latency **CDF**, **box plots**, stage breakdown, **Pareto** front accuracy × latency (and × energy once measured).
 - Abacus read backwards (p.22): configs meeting R1, R2, R4, R5.
