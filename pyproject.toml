@@ -10,35 +10,39 @@ description = "ROS-free trash detection pipeline (preprocess, infer, postprocess
 # Every pin below has wheels for both (checked on PyPI, 26/11/2026).
 requires-python = ">=3.10"
 dependencies = [
-    "numpy==2.1.3",                      # same numpy on every device
+    "numpy==2.1.3",                      # same numpy on every device; every result so far ran on it
     "opencv-python-headless==5.1.0.95",  # same version as the opencv-python ultralytics pulls in on the VM
-    "pyyaml==6.0.4",
-    "psutil==7.2.2",
+    "pyyaml==6.0.4",                     # current on 26/11
+    "psutil==7.2.2",                     # current on 26/11
 ]
 
 [project.optional-dependencies]
-onnx = ["onnxruntime==1.23.2"]
+onnx = ["onnxruntime==1.23.2"]  # last ORT with Python 3.10 wheels (VM): one ORT version on every device
 tflite = ["ai-edge-litert==2.3.0"]  # 2.3.0: what litert-torch (VM export) needs, same on the Pis
-oak = ["depthai==3.12.2"]
+oak = ["depthai==3.12.2"]  # current on 26/11, has a cp313 aarch64 wheel
 tvm = ["apache-tvm==0.27.0.post1", "onnx==1.20.1"]  # Pis only: conflicts with litert-torch in "models" (docs/problems.md). onnx: compile_tvm.py reads the .onnx
 # hailo: no pip package, HailoRT 4.23.0 comes from apt (python3-hailort) on Raspberry Pi OS
-bench = ["pandas==2.3.3", "matplotlib==3.10.9", "pycocotools==2.0.11"]
+bench = [  # analysis only: never touches a measured number
+    "pandas==2.3.3",          # not 3.x: 3.0 changes defaults, nothing we need
+    "matplotlib==3.10.9",
+    "pycocotools==2.0.11",    # COCO mAP, current
+]
 # VM / laptop only: training, export, compilation
 models = [
-    "torch==2.14.1",          # CPU wheels: --extra-index-url https://download.pytorch.org/whl/cpu
-    "torchvision==0.29.2",
-    "ultralytics==8.4.219",
-    "opencv-python==5.1.0.95",
+    "torch==2.14.1",          # litert-torch 0.10 needs < 2.15. CPU wheels: --extra-index-url https://download.pytorch.org/whl/cpu
+    "torchvision==0.29.2",    # pairs with torch 2.14
+    "ultralytics==8.4.219",   # current on 25/11
+    "opencv-python==5.1.0.95",  # ultralytics pulls it in: same version as the headless one
     "onnx==1.20.1",           # 1.22 needs typing_extensions >= 4.15; xdsl (via litert-torch) caps it < 4.13
-    "onnxslim==0.1.99",
-    "torch-pruning==1.6.1",
-    "litert-torch==0.10.0",   # Ultralytics' TFLite exporter
-    "ai-edge-quantizer==0.10.1",
-    "torchao==0.18.0",
-    "jax==0.6.2",
-    "blobconverter==1.4.3",
+    "onnxslim==0.1.99",       # Ultralytics' ONNX simplify=True
+    "torch-pruning==1.6.1",   # models/prune.py
+    "litert-torch==0.10.0",   # our one TFLite converter (YOLO via Ultralytics, SSDLite directly)
+    "ai-edge-quantizer==0.10.1",  # static INT8 TFLite
+    "torchao==0.18.0",        # needed by litert-torch
+    "jax==0.6.2",             # needed by litert-torch; last jax with Python 3.10 wheels
+    "blobconverter==1.4.3",   # OAK .blob via Luxonis' web service: the only path without installing OpenVINO 2022.1
 ]
-dev = ["pytest==9.2.0", "ruff==0.17.6", "pre-commit==4.6.2"]
+dev = ["pytest==9.2.0", "ruff==0.17.6", "pre-commit==4.6.2"]  # ruff: same as .pre-commit-config.yaml
 
 [tool.setuptools]
 packages = ["edgetrash", "edgetrash.backends"]
