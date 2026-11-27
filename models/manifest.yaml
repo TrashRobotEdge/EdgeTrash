@@ -287,8 +287,8 @@ variants:
     anchors: ssdlite-coco-320.anchors.npy
     classes: coco91
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:07:14Z'
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-27T14:43:33Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
@@ -298,8 +298,7 @@ variants:
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
+      ai-edge-quantizer: 0.10.1
   ssdlite-coco-320-int8-onnx:
     file: ssdlite-coco-320-int8-onnx.onnx
     sha256: 50069d002f6cb956cac18881dd356c2fe6c9402aea0caafbbffd00d796714749
@@ -316,8 +315,8 @@ variants:
     calib: data/splits/coco-calib.txt
     calib_images: 200
     made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:07:38Z'
+      tflite-int8 --calib data/splits/coco-calib.txt
+    made_at: '2026-11-27T14:43:56Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
@@ -327,12 +326,11 @@ variants:
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
+      ai-edge-quantizer: 0.10.1
   ssdlite-coco-320-fp32-tflite:
     file: ssdlite-coco-320-fp32-tflite.tflite
-    sha256: 7d4874b5be364a4f8801117122ce8f57acb3025f89ca6b02571292dba673c3bd
-    size_mb: 13.76
+    sha256: b6bac553868ce0481101c359ad12f936cbf887a235e49c6e33a26418f892d4d1
+    size_mb: 14.01
     backend: tflite
     precision: fp32
     normalized_boxes: false
@@ -340,11 +338,11 @@ variants:
     weights: coco
     input_size: 320
     head: ssd
-    anchors: ssdlite-coco-320.anchors.npy
     classes: coco91
-    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:17:19Z'
+    anchors: ssdlite-coco-320.anchors.npy
+    made_by: python models/export.py --arch ssdlite --to tflite-fp32 tflite-int8 --calib
+      data/splits/coco-calib.txt
+    made_at: '2026-11-27T14:54:58Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
@@ -354,39 +352,11 @@ variants:
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
-  ssdlite-coco-320-fp16-tflite:
-    file: ssdlite-coco-320-fp16-tflite.tflite
-    sha256: 2763cd08c1eee9f69d3dff4613858dd3fa55f27568c6883fa9b39d3e44273405
-    size_mb: 6.93
-    backend: tflite
-    precision: fp16
-    normalized_boxes: false
-    arch: ssdlite
-    weights: coco
-    input_size: 320
-    head: ssd
-    anchors: ssdlite-coco-320.anchors.npy
-    classes: coco91
-    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:17:19Z'
-    versions:
-      python: 3.10.12
-      ultralytics: 8.4.219
-      torch: 2.14.1+cpu
-      torchvision: 0.29.2+cpu
-      onnx: 1.20.1
-      onnxruntime: 1.23.2
-      litert-torch: 0.10.0
-      ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
+      ai-edge-quantizer: 0.10.1
   ssdlite-coco-320-int8-tflite:
     file: ssdlite-coco-320-int8-tflite.tflite
-    sha256: 992b4f3caf8d7dbd662b5fcf321da5f1093f175beb021d135cb26b23349c5e9f
-    size_mb: 4.14
+    sha256: 8a330cf6899df4c3f34e686ee93fd92ef3fecdec02f9ccb9522520532e5ba8c2
+    size_mb: 4.39
     backend: tflite
     precision: int8
     normalized_boxes: false
@@ -394,13 +364,13 @@ variants:
     weights: coco
     input_size: 320
     head: ssd
-    anchors: ssdlite-coco-320.anchors.npy
     classes: coco91
+    anchors: ssdlite-coco-320.anchors.npy
     calib: data/splits/coco-calib.txt
     calib_images: 200
-    made_by: python models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-fp16 tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:17:19Z'
+    made_by: python models/export.py --arch ssdlite --to tflite-fp32 tflite-int8 --calib
+      data/splits/coco-calib.txt
+    made_at: '2026-11-27T14:54:58Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
@@ -410,8 +380,7 @@ variants:
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
+      ai-edge-quantizer: 0.10.1
   ssdlite-coco-320-fp16-oak:
     file: ssdlite-coco-320-fp16-oak.blob
     sha256: 9cc02e124838d64dfe350a22d172e0c193bd1494862b9dbc1b98432d16e01ca5

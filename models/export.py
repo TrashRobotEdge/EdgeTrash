@@ -1,6 +1,6 @@
 """Export one model to the CPU formats, one variant per --to value. VM / laptop only.
 
-    python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32 tflite-fp16 tflite-int8 \
+    python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32 tflite-int8 \
         --calib data/splits/coco-calib.txt
     python models/export.py --arch ssdlite --weights models/files/ssdlite-cans.pt --to onnx-fp32 --calib data/splits/cans-calib.txt
 
@@ -20,16 +20,14 @@ from pathlib import Path
 
 import numpy as np
 
-from common import calib_array, calib_tensors, model_path, pretrained, read_list, register
+from common import calib_tensors, model_path, pretrained, read_list, register
 from edgetrash.detector import MODEL_DIR, read_manifest
 
 ULTRALYTICS = {"yolov5nu", "yolov8n", "yolo11n"}
-TARGETS = ("onnx-fp32", "onnx-int8", "tflite-fp32", "tflite-fp16", "tflite-int8")
+TARGETS = ("onnx-fp32", "onnx-int8", "tflite-fp32", "tflite-int8")  # no tflite-fp16: litert-torch exports none
 CALIB_LIMIT = 200  # images; keeps export to a few minutes
-# Ultralytics 8.4 exports TFLite with litert-torch: one .tflite per call ("int8" = static int8 weights +
-# activations). onnx2tf (SSDLite) writes them all at once; its dynamic-range "_int8" is not used.
-ONNX2TF_TFLITE = {"fp32": "_float32.tflite", "fp16": "_float16.tflite", "int8": "_full_integer_quant.tflite"}
-PKGS = ("ultralytics", "torch", "torchvision", "onnx", "onnxruntime", "litert-torch", "ai-edge-litert", "tensorflow", "onnx2tf")
+# TFLite for every arch: litert-torch, one .tflite per call ("int8" = static int8 weights + activations).
+PKGS = ("ultralytics", "torch", "torchvision", "onnx", "onnxruntime", "litert-torch", "ai-edge-litert", "ai-edge-quantizer")
 
 
 def tag_of(weights: str) -> str:
@@ -156,47 +154,44 @@ def quantize_onnx(fp32: Path, out: Path, size: int, calib: Path, exclude: list[s
         )
 
 
-def export_tflite(args, fp32_onnx: Path, base: str, precisions: list[str]) -> dict[str, Path]:
+def ssdlite_litert(args, precision: str, out: Path) -> None:
+    """SSDLite -> TFLite with the tools Ultralytics uses for YOLO: litert-torch, then ai-edge-quantizer's
+    static INT8 recipe (FP32 in/out), calibrated with our preprocessing. Replaces onnx2tf (docs/problems.md)."""
+    import litert_torch
+    import torch
+
+    import ssdlite
+
+    model, _ = ssdlite.load(args.weights)
+    x = torch.zeros(1, 3, ssdlite.SIZE, ssdlite.SIZE)
+    litert_torch.convert(ssdlite.RawHead(model).eval(), (x,)).export(str(out))
+    if precision == "int8":
+        from ai_edge_quantizer import calibrator, qtyping, quantizer, recipe
+
+        qt = quantizer.Quantizer(str(out))
+        qt.load_quantization_recipe(recipe.static_wi8_ai8())
+        for op in (qtyping.TFLOperationName.INPUT, qtyping.TFLOperationName.OUTPUT):
+            qt.update_quantization_recipe(regex=".*", operation_name=op, algorithm_key=recipe.AlgorithmName.NO_QUANTIZE)
+        samples = [{"args_0": t} for t in calib_tensors(args.calib, args.size, "nchw", "float32", CALIB_LIMIT)]
+        result = qt.calibrate({"serving_default": samples}, mode=calibrator.CalibrationMode.CALIBRATION_PROFILER_BASED)
+        qt.quantize(calibration_result=result).export_model(str(out), overwrite=True)
+
+
+def export_tflite(args, base: str, precisions: list[str]) -> dict[str, Path]:
     outs = {}
     for p in precisions:
         outs[p] = model_path(f"{base}-{p}-tflite", "tflite")
         with tempfile.TemporaryDirectory() as t:
             tmp = Path(t)
             if args.arch in ULTRALYTICS:  # Ultralytics -> litert-torch; its TFLite head normalises boxes to [0, 1]
-                opts = {"quantize": {"fp32": None, "fp16": 16, "int8": 8}[p]}
+                opts = {"quantize": {"fp32": None, "int8": 8}[p]}
                 if p == "int8":
                     opts["data"] = str(calib_yaml(args.calib, tmp))
                 ultralytics_export(args, tmp, "tflite", **opts)
                 shutil.copy(one(tmp, ".tflite"), outs[p])
                 drop_export_date(outs[p])
-            else:  # our SSDLite ONNX -> onnx2tf, calibrated with our preprocessing
-                import onnx2tf
-
-                calib = None
-                if p == "int8":
-                    np.save(tmp / "calib.npy", calib_array(args.calib, args.size, CALIB_LIMIT))
-                    calib = [["images", str(tmp / "calib.npy"), [[[[0, 0, 0]]]], [[[[255, 255, 255]]]]]]
-                # onnx2tf validates with a sample file from cwd, else downloads one numpy can't load (pickled):
-                # give it 20 of our calibration images instead
-                sample = calib_array(args.calib, 128, 20).astype(np.float32) / 255
-                np.save(tmp / "calibration_image_sample_data_20x128x128x3_float32.npy", sample)
-                work = tmp / fp32_onnx.name  # onnx2tf overwrites its input file (docs/problems.md): give it a copy
-                shutil.copy(fp32_onnx, work)
-                cwd = os.getcwd()
-                os.chdir(tmp)
-                try:
-                    onnx2tf.convert(
-                        input_onnx_file_path=str(work),
-                        output_folder_path=str(tmp / "tf"),
-                        not_use_onnxsim=True,
-                        verbosity="error",
-                        output_integer_quantized_tflite=calib is not None,
-                        custom_input_op_name_np_data_path=calib,
-                        output_signaturedefs=True,
-                    )
-                finally:
-                    os.chdir(cwd)
-                shutil.copy(one(tmp, ONNX2TF_TFLITE[p]), outs[p])
+            else:
+                ssdlite_litert(args, p, outs[p])
     return outs
 
 
@@ -212,8 +207,6 @@ def main():
         args.size = 320
     if any(t.endswith("int8") for t in args.to) and not args.calib:
         p.error("--calib is needed for int8 targets")
-    if args.arch in ULTRALYTICS and "tflite-fp16" in args.to:
-        p.error("tflite-fp16: Ultralytics' LiteRT exporter has no FP16 (docs/problems.md)")
     base = f"{args.arch}-{tag_of(args.weights)}-{args.size}"
     common = {"arch": args.arch, "weights": args.weights, "input_size": args.size}
     calib = {"calib": str(args.calib), "calib_images": CALIB_LIMIT} if args.calib else {}
@@ -232,7 +225,7 @@ def main():
         register(f"{base}-int8-onnx", out, PKGS, backend="onnx", precision="int8", float_nodes=len(exclude), **common, **extra, **calib)
     tflite = [t.split("-")[1] for t in args.to if t.startswith("tflite")]
     if tflite:
-        for precision, out in export_tflite(args, fp32, base, tflite).items():
+        for precision, out in export_tflite(args, base, tflite).items():
             register(
                 f"{base}-{precision}-tflite",
                 out,

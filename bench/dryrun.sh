@@ -14,7 +14,7 @@ $PY models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32 tflite-
 $PY models/export.py --arch yolov8n --size 320 --to onnx-fp32
 $PY models/prune.py --arch yolov8n --target 0.5
 $PY models/export.py --arch yolov8n --weights models/files/yolov8n-coco_p51.pt --to onnx-fp32
-$PY models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32 tflite-fp16 tflite-int8 --calib $CALIB
+$PY models/export.py --arch ssdlite --to onnx-fp32 onnx-int8 tflite-fp32 tflite-int8 --calib $CALIB
 $PY models/compile_oak.py --variant yolov8n-coco-640-fp32-onnx
 $PY models/compile_oak.py --variant ssdlite-coco-320-fp32-onnx
 $PY models/compile_hailo.py --zoo yolov8n

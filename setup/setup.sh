@@ -83,7 +83,7 @@ performance_governor() {  # lasts until reboot; run.py warns if it is not set (B
 versions() {
   say "Versions (also written into every results meta.json)"
   echo "  $(grep PRETTY_NAME /etc/os-release | cut -d= -f2) · kernel $(uname -r) · $(board)"
-  (cd "$REPO" && .venv/bin/pip list 2>/dev/null | grep -i -E '^(numpy|opencv-python-headless|onnxruntime|ai-edge-litert|depthai|apache-tvm|torch|ultralytics|tensorflow) ' | sed 's/^/  /') || true
+  (cd "$REPO" && .venv/bin/pip list 2>/dev/null | grep -i -E '^(numpy|opencv-python-headless|onnxruntime|ai-edge-litert|depthai|apache-tvm|torch|ultralytics|litert-torch) ' | sed 's/^/  /') || true
 }
 
 smoke() {

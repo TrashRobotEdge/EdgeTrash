@@ -15,4 +15,4 @@ Variant name = `<arch>-<weights>-<input size>-<precision>-<runtime>`, e.g. `yolo
 | Hailo | `.venv-hailo/bin/python models/compile_hailo.py --variant <…-fp32-onnx> --calib …` · `--zoo yolov8n` for the vendor reference | `.hef` INT8 |
 | TVM | `python models/compile_tvm.py --variant <…-fp32-onnx> --target pi4\|pi5` (on that Pi: TVM conflicts with the VM's litert-torch) | `.so`, untuned |
 
-Known gaps (see [docs/problems.md](../docs/problems.md)): no FP16 TFLite for YOLO (Ultralytics' LiteRT exporter has none) · Hailo: no zoo recipe for YOLOv5nu / SSDLite · SSDLite TFLite goes through onnx2tf, not litert-torch · a pruned model without `--data` (no fine-tune) detects nothing (mAP 0.0 at 51 %, scores near 0 already at 7 %).
+Known gaps (see [docs/problems.md](../docs/problems.md)): no FP16 TFLite (litert-torch, our one TFLite converter, has no FP16 mode) · Hailo: no zoo recipe for YOLOv5nu / SSDLite · a pruned model without `--data` (no fine-tune) detects nothing (mAP 0.0 at 51 %, scores near 0 already at 7 %).

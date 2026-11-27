@@ -2,6 +2,7 @@
   "variant": "ssdlite-coco-320-fp32-tflite",
   "split": "data/splits/coco-eval.txt",
   "n_images": 500,
+  "min_score": 0.001,
   "map50_95": 0.2103,
   "map50": 0.3347,
   "conf": 0.25,
@@ -13,13 +14,18 @@
     "version": "2.3.0",
     "threads": 4,
     "input_dtype": "<class 'numpy.float32'>",
-    "layout": "nhwc"
+    "layout": "nchw"
   },
   "meta": {
-    "commit": "f4b7a534b2b16a849603728ffdd84b40356c32e3",
-    "dirty": false,
-    "command": "python bench/accuracy.py --device vm --variant ssdlite-coco-320-fp32-tflite --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json",
-    "utc": "2026-11-26T13:28:48Z",
+    "commit": "22981c77db16c0de67a9093e73a226c70b1cadea",
+    "dirty": [
+      "bench/dryrun.sh",
+      "models/common.py",
+      "models/export.py",
+      "models/manifest.yaml"
+    ],
+    "command": "python bench/accuracy.py --device vm --variant ssdlite-coco-320-fp32-tflite --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json",
+    "utc": "2026-11-27T14:48:44Z",
     "host": "Autonomous-Systems",
     "machine": "x86_64",
     "os": "Ubuntu 22.04.5 LTS",

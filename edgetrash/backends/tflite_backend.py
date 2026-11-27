@@ -15,7 +15,7 @@ class Backend:
         self.it.allocate_tensors()
         self.inp = self.it.get_input_details()[0]
         self.outs = sorted(self.it.get_output_details(), key=lambda o: o["name"])
-        # litert-torch keeps PyTorch's NCHW input, onnx2tf converts to NHWC: read it from the model
+        # litert-torch keeps PyTorch's NCHW input; other converters give NHWC: read it from the model
         self.layout = "nchw" if self.inp["shape"][1] == 3 else "nhwc"
 
     def infer(self, x):

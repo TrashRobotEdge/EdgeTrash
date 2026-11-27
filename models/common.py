@@ -9,7 +9,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import cv2
-import numpy as np
 import yaml
 
 from edgetrash.detector import MANIFEST, MODEL_DIR, sha256
@@ -71,8 +70,3 @@ def calib_tensors(list_file: Path, size: int, layout: str = "nchw", dtype: str =
     for path in read_list(list_file)[:limit]:
         rgb, _ = letterbox(cv2.imread(str(path)), size)
         yield to_tensor(rgb, layout, dtype)
-
-
-def calib_array(list_file: Path, size: int, limit: int) -> np.ndarray:
-    """N x H x W x 3 RGB uint8, the format the Hailo and TFLite calibrators want."""
-    return np.concatenate(list(calib_tensors(list_file, size, "nhwc", "uint8", limit)))

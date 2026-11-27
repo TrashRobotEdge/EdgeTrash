@@ -111,3 +111,10 @@ Numbers marked *(one-off check)* come from one interactive check, with no script
 - **Diagnosis:** Ultralytics stamps the export time into every file: a `date` entry in the ONNX metadata, a `metadata.json` zip appended to the `.tflite`. Without them, two rebuilds of `yolov8n-coco-640` FP32 ONNX, INT8 ONNX and FP32 TFLite are byte-identical (checked 27/11 in a scratch clone).
 - **Chosen:** `export.py` drops both after export (edgetrash never reads them), and `register()` leaves a manifest entry untouched when file, command and versions are the same.
 - **Still open:** YOLOv8n **INT8 TFLite** differs between rebuilds beyond the date: 24.5k of 3.6M bytes (*one-off check*), so its calibration (Ultralytics + litert-torch) isn't deterministic. Cause not found yet. Until then, as for Hailo `.hef` files: the manifest checksum, not a rebuild, ties a result to its file.
+
+### 2026-11-27: two TFLite converters, one per architecture (benchmark kit, audit F15)
+- **Symptom:** YOLO went to TFLite through litert-torch (Ultralytics), SSDLite through onnx2tf: converter and architecture changed together, and onnx2tf needed TensorFlow + 4 more pins and 28 lines of workarounds (sample file, input copy, cwd).
+- **Diagnosis:** onnx2tf was only there for SSDLite. litert-torch converts our SSDLite `RawHead` directly (no ONNX step).
+- **Alternatives:** keep onnx2tf · litert-torch for both, with ai-edge-quantizer's static INT8 recipe (FP32 in/out), the one Ultralytics uses for YOLO.
+- **Chosen:** litert-torch for both, because one converter means a TFLite difference between architectures isn't a converter difference. Pass rule set beforehand: litert INT8 mAP ≥ onnx2tf INT8 mAP. On the 500 eval images (VM, `results/raw/vm/accuracy/`): FP32 0.2103 for both converters; INT8 0.2032 (litert) vs 0.1907 (onnx2tf), so a 0.71-point drop vs FP32 instead of 1.96. TensorFlow, tf_keras, onnx2tf, sng4onnx and onnx_graphsurgeon are gone.
+- **Cost:** no SSDLite FP16 TFLite any more (litert-torch has no FP16 mode): the LiteRT FP16 cell is now ✗ for both architectures, as for YOLO above. The FP16 variant was in no bench config.

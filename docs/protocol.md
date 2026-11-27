@@ -54,7 +54,7 @@ We produce abacuses that link a config (model × optimisation × device) to late
 | Toolchain → device | FP32 | FP16 | INT8 | Pruned | 320 |
 |---|---|---|---|---|---|
 | ONNX Runtime → Pi4 / Pi5 CPU | ✓ | ? (which ops have ARM fp16 kernels: to check) | ✓ static QDQ | ✓ | ✓ |
-| LiteRT (TFLite) → Pi4 / Pi5 CPU | ✓ | SSDLite ✓ · YOLO ? (no FP16 in Ultralytics' exporter) | ✓ static int8 | ? | ? |
+| LiteRT (TFLite) → Pi4 / Pi5 CPU | ✓ | ✗ (litert-torch has no FP16 mode, problems.md) | ✓ static int8 | ? | ? |
 | TVM (untuned) → Pi4 / Pi5 CPU | ✓ | ✗ | ✗ | ? | ? |
 | Hailo DFC → Pi5 + Hailo-8L | ✗ | ✗ | ✓ only | ✗ | ? |
 | OpenVINO blob → OAK-D Pro VPU | ✗ | ✓ only (SSDLite: after swapping HardSigmoid, problems.md) | ✗ | ✗ | ? |
