@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -42,18 +43,32 @@ def make():
     print(f"{SUBSET.relative_to(REPO)}: {len(images)} images, {len(anns)} annotations")
 
 
+def download(url: str, dest: Path, tries: int = 3) -> None:
+    """A timeout, so one stalled connection can't hang the fetch forever (seen on the VM)."""
+    for _ in range(tries):
+        try:
+            with urllib.request.urlopen(url, timeout=30) as r:
+                dest.write_bytes(r.read())
+            return
+        except OSError as e:  # URLError, timeouts, resets
+            err = e
+    raise SystemExit(f"can't download {url} ({err}): check the internet, or use a USB stick (setup/README.md)")
+
+
+def fetch_one(im: dict, root: Path) -> str | None:
+    """Download one image unless it's already there. Returns its path if the checksum is wrong."""
+    dest = root / im["path"]
+    if dest.exists() and sha256(dest) == im["sha256"]:
+        return None
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    download(im["coco_url"], dest)
+    return None if sha256(dest) == im["sha256"] else im["path"]
+
+
 def fetch(root: Path):
     images = json.loads(SUBSET.read_text(encoding="utf-8"))["images"]
-    bad = []
-    for i, im in enumerate(images):
-        dest = root / im["path"]
-        if not (dest.exists() and sha256(dest) == im["sha256"]):
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            urllib.request.urlretrieve(im["coco_url"], dest)
-            if sha256(dest) != im["sha256"]:
-                bad.append(im["path"])
-        if (i + 1) % 100 == 0:
-            print(f"{i + 1}/{len(images)}")
+    with ThreadPoolExecutor(8) as pool:  # 500 small files: one at a time took 5 min on the VM
+        bad = [p for p in pool.map(lambda im: fetch_one(im, root), images) if p]
     if bad:
         raise SystemExit(f"{len(bad)} images differ from the subset's sha256, e.g. {bad[0]}: delete them and fetch again")
     print(f"[ok] {len(images)} COCO eval images in {root / 'data/coco/val2017'}, checksums match")
