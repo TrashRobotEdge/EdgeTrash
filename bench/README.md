@@ -13,6 +13,5 @@ Rules and every number: [docs/protocol.md](../docs/protocol.md). Device settings
 | `python bench/sweep.py --config …` | idle + all variants × reps, interleaved | same |
 | `python bench/accuracy.py --device vm --variant <v> --split data/splits/coco-eval.txt --ann data/coco/annotations/instances_val2017.json` | mAP, P/R/F1 on the device's output | `results/raw/<device>/accuracy/<v>.json` |
 | `python bench/analyze.py [--meter meter.csv]` | tables + figures from raw logs only | `results/summary.csv`, `results/accuracy.csv`, `results/figures/` |
-| `streamlit run bench/ui.py` | the same buttons in a page (started by `setup/setup.sh`) | |
 
 Power: `power.py`. Pi 5 PMIC is read automatically. The inline meter's export format is still open (#6): until then, give `analyze.py` a CSV `t_unix,watts`.

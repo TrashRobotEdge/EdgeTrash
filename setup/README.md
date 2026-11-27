@@ -1,6 +1,6 @@
 # Setup: one script, every device
 
-`bash setup/setup.sh` asks which config the machine is, installs exactly that (pinned versions), sets the CPU governor, prints versions, runs a smoke test and starts the benchmark UI. Re-run it any time: it only adds what's missing.
+`bash setup/setup.sh` asks which config the machine is, installs exactly that (pinned versions), sets the CPU governor, prints versions, and runs a smoke test. Re-run it any time: it only adds what's missing.
 
 | Config | Machine | Installs | Checks |
 |---|---|---|---|
@@ -21,12 +21,15 @@
    bash ~/edgetrash-bundle/install.sh                         # clones ~/EdgeTrash, copies models + frames, runs setup.sh
    ```
    Pick the config. `pi5-hailo` the first time: it installs the driver, then asks for `sudo reboot`. Reboot and run `bash ~/EdgeTrash/setup/setup.sh` again.
-4. **Open the UI** from the laptop: the script prints `http://<pi-ip>:8501`. Pick config → *Smoke test* → *Idle baseline* → *Run benchmark* → *Analyze*.
+4. **Run the sweep** on the Pi (idle baseline + every variant × reps, with cool-downs). `nohup` because a hotspot drop would kill a run tied to the ssh session; then log out, so nothing else runs during it (protocol §5):
+   ```bash
+   cd ~/EdgeTrash && nohup .venv/bin/python bench/sweep.py --config bench/configs/<config>.yaml > sweep.log 2>&1 &
+   ```
 5. **Bring results back:** `scp -r <user>@<pi>.local:~/EdgeTrash/results/raw/<device> results/raw/` on the laptop, then commit them.
 
 **Success = the smoke test prints a p50 for every variant that has a model file.**
 
-Same commands without the UI: `python bench/smoke.py|run.py|sweep.py|analyze.py --config bench/configs/<config>.yaml` (see [bench/README.md](../bench/README.md)).
+Every command (smoke, one run, accuracy, analyze): [bench/README.md](../bench/README.md).
 
 ## Hailo Dataflow Compiler (to build our own `.hef`)
 Only needed on the machine that compiles (VM/laptop), never on the Pi. It must be **DFC 3.33.0**: Hailo Model Zoo v2.17 pairs it with HailoRT 4.23.0, which is what Raspberry Pi OS Trixie ships. A `.hef` from a newer DFC may not run on an older HailoRT.
@@ -40,7 +43,6 @@ If 3.33.0 isn't listed even in *Archive*, the account may lack access: ask on co
 
 ## When it fails
 Write it in [docs/problems.md](../docs/problems.md) (symptom → diagnosis → alternatives). Known ones:
-- `sudo` asks a password from the UI's *Install* button → run `bash setup/setup.sh` in a terminal instead.
 - Hailo not answering after the first install → reboot.
 - OAK not found → replug after the udev rule, use a blue USB 3 port.
 - Governor back to `ondemand` after a reboot → re-run the script (`bench/run.py` warns).

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # One setup script for every device. Asks which config, installs exactly that, checks it,
-# then starts the benchmark UI. Safe to re-run: it only adds what is missing.
+# then runs a smoke test. Safe to re-run: it only adds what is missing.
 #
 #   bash setup/setup.sh                          # menu
 #   bash setup/setup.sh --config pi5-hailo       # no menu
 #   bash setup/setup.sh --config vm-hailo --dfc ~/Downloads/hailo_dataflow_compiler-3.33.0-py3-none-linux_x86_64.whl
-#   options: --no-ui (don't start the UI) · --yes (no questions, sudo must not ask a password)
+#   options: --yes (no questions, sudo must not ask a password)
 #
 # Versions are pinned in pyproject.toml. What each config does: setup/README.md.
 set -euo pipefail
@@ -14,7 +14,7 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIGS=(pi4-cpu pi5-cpu pi5-hailo oak vm-dev vm-hailo)
 TORCH_INDEX="https://download.pytorch.org/whl/cpu"
 HAILO_ZOO_TAG="v2.17"  # Hailo Model Zoo: pairs with DFC 3.33.0 / HailoRT 4.23.0
-CONFIG="" UI=1 YES=0 DFC=""
+CONFIG="" YES=0 DFC=""
 export PYTHONPATH=""            # a sourced ROS setup leaks its packages into our venv otherwise
 export PYTHONIOENCODING=utf-8
 
@@ -22,9 +22,8 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --config) CONFIG="$2"; shift 2 ;;
     --dfc) DFC="$2"; shift 2 ;;
-    --no-ui) UI=0; shift ;;
     --yes) YES=1; shift ;;
-    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     *) echo "unknown option $1"; exit 2 ;;
   esac
 done
@@ -83,18 +82,12 @@ performance_governor() {  # lasts until reboot; run.py warns if it is not set (B
 versions() {
   say "Versions (also written into every results meta.json)"
   echo "  $(grep PRETTY_NAME /etc/os-release | cut -d= -f2) · kernel $(uname -r) · $(board)"
-  (cd "$REPO" && .venv/bin/pip list 2>/dev/null | grep -i -E '^(numpy|opencv-python-headless|onnxruntime|ai-edge-litert|depthai|apache-tvm|streamlit|torch|ultralytics|tensorflow) ' | sed 's/^/  /') || true
+  (cd "$REPO" && .venv/bin/pip list 2>/dev/null | grep -i -E '^(numpy|opencv-python-headless|onnxruntime|ai-edge-litert|depthai|apache-tvm|torch|ultralytics|tensorflow) ' | sed 's/^/  /') || true
 }
 
 smoke() {
   say "Smoke test: a few frames of every variant this config can run"
   (cd "$REPO" && .venv/bin/python bench/smoke.py --config "bench/configs/$CONFIG.yaml")
-}
-
-start_ui() {
-  [[ $UI == 1 ]] || return 0
-  say "Benchmark UI: open http://$(hostname -I | awk '{print $1}'):8501 from your laptop (Ctrl-C to stop)"
-  cd "$REPO" && exec .venv/bin/streamlit run bench/ui.py --server.address 0.0.0.0 --server.port 8501 --server.headless true
 }
 
 pi_cpu() {
@@ -159,7 +152,7 @@ vm_dev() {
   fi
 }
 
-vm_hailo() {  # compiler only: no UI, no smoke test (nothing runs without the chip)
+vm_hailo() {  # compiler only: no smoke test (nothing runs without the chip)
   [[ -f "$DFC" ]] || die "give the Dataflow Compiler wheel: --dfc <path to hailo_dataflow_compiler-3.33.0-...whl> (how to get it: setup/README.md)"
   need_venv python3.10
   apt_install python3.10-dev python3-tk graphviz libgraphviz-dev
@@ -177,7 +170,6 @@ vm_hailo() {  # compiler only: no UI, no smoke test (nothing runs without the ch
   (cd "$REPO" && .venv-hailo/bin/pip install -q --no-deps -e .)
   "$REPO/.venv-hailo/bin/python" -c "import cv2, numpy, yaml, hailo_sdk_client" || die "Hailo venv broken: see the pip output above"
   ok "$("$REPO/.venv-hailo/bin/pip" list 2>/dev/null | grep -i -E '^hailo' | tr -s ' ' | paste -sd',')"
-  UI=0
 }
 
 pick_config
@@ -193,4 +185,4 @@ case "$CONFIG" in
 esac
 versions
 smoke || warn "smoke test failed: see above, then docs/problems.md"
-start_ui
+say "Next: .venv/bin/python bench/sweep.py --config bench/configs/$CONFIG.yaml (steps: setup/README.md)"

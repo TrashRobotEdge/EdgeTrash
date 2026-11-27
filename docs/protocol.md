@@ -80,7 +80,7 @@ Hailo and OAK accept one precision each, so "precision" and "device" are partly 
 - **No benchmark right after power-up** (p.28): idle baseline first.
 
 ## 6. Measure (p.29–30)
-Per device: `python bench/sweep.py --config bench/configs/<device>.yaml` (or the UI).
+Per device: `python bench/sweep.py --config bench/configs/<device>.yaml`.
 1. **Idle** ≥ 60 s, nothing running → P_idle.
 2. Each variant in a **fresh process**: load (timed), **50 warm-up frames** (kept in the CSV, flagged, excluded from stats), then **≥ 60 s and ≥ 300 frames** steady. Every frame kept.
 3. **5 repetitions**, variants **interleaved** in a new random order each repetition (seed = rep), 10 s cool-down between runs (p.28, p.31).

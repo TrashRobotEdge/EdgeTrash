@@ -22,7 +22,7 @@ tflite = ["ai-edge-litert==2.3.0"]  # 2.3.0: what litert-torch (VM export) needs
 oak = ["depthai==3.12.2"]
 tvm = ["apache-tvm==0.27.0.post1"]  # Pis only: conflicts with litert-torch in "models" (docs/problems.md)
 # hailo: no pip package, HailoRT 4.23.0 comes from apt (python3-hailort) on Raspberry Pi OS
-bench = ["pandas==2.3.3", "matplotlib==3.10.9", "pycocotools==2.0.11", "streamlit==1.65.0"]
+bench = ["pandas==2.3.3", "matplotlib==3.10.9", "pycocotools==2.0.11"]
 # VM / laptop only: training, export, compilation
 models = [
     "torch==2.14.1",          # CPU wheels: --extra-index-url https://download.pytorch.org/whl/cpu
