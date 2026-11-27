@@ -446,3 +446,26 @@ variants:
     versions:
       python: 3.10.12
       opencv-python-headless: 5.1.0.95
+  yolov8n-coco-640-int8-hailo:
+    file: yolov8n-coco-640-int8-hailo.hef
+    sha256: c44f7c9664e687925ff3ce6505f30c36ceb6b2af71ee990325b155946f97c32f
+    size_mb: 9.21
+    backend: hailo
+    precision: int8
+    source: yolov8n-coco-640-fp32-onnx
+    hw_arch: hailo8l
+    arch: yolov8n
+    weights: coco
+    input_size: 640
+    head: hailo_nms
+    classes: coco80
+    calib: data/splits/coco-calib.txt
+    calib_images: 200
+    optimization_level: '0'
+    made_by: python models/compile_hailo.py --variant yolov8n-coco-640-fp32-onnx --calib
+      data/splits/coco-calib.txt
+    made_at: '2026-11-27T11:03:28Z'
+    versions:
+      python: 3.10.12
+      hailo-dataflow-compiler: 3.33.0
+      hailo-model-zoo: 2.17.0
