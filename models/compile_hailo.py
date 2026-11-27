@@ -23,6 +23,7 @@ from edgetrash.detector import read_manifest
 
 ZOO_NAME = {"yolov8n": "yolov8n", "yolo11n": "yolov11n"}  # yolov5nu / ssdlite: no zoo recipe (docs/problems.md)
 CALIB_LIMIT = 200
+OPT_LEVEL = re.compile(r"Reducing optimization level to (\d)")  # the DFC's own warning
 HEAD_CONV = re.compile(r"/model\.\d+/(cv[23])\.(\d)/cv[23]\.\d\.2/Conv")
 ZOO_URL = "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.17.0/{hw}/{name}.hef"  # Model Zoo v2.17 docs
 
@@ -38,6 +39,19 @@ def head_convs(onnx_file: Path) -> list[str]:
     if len(convs) != 6:
         raise SystemExit(f"{onnx_file.name}: expected 6 head convs, found {[c[2] for c in convs]}")
     return [n for _, _, n in convs]  # per scale: box (cv2) then class (cv3)
+
+
+def run_logged(cmd: list[str], cwd: Path) -> str:
+    """Run hailomz, show its output, return the optimization level it actually used."""
+    level = "default"
+    with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
+        for line in proc.stdout:
+            print(line, end="", flush=True)
+            if m := OPT_LEVEL.search(line):
+                level = m.group(1)
+    if proc.returncode:
+        raise subprocess.CalledProcessError(proc.returncode, cmd)
+    return level
 
 
 def fetch_zoo(arch: str, hw: str) -> None:
@@ -101,7 +115,7 @@ def main():
             *head_convs(MODEL_DIR / v["file"]),
         ]
         print(" ".join(cmd))
-        subprocess.run(cmd, cwd=tmp, check=True)
+        level = run_logged(cmd, tmp)
         shutil.copy(tmp / f"{ZOO_NAME[v['arch']]}.hef", out)
     register(
         name,
@@ -118,6 +132,7 @@ def main():
         classes=v["classes"],
         calib=str(args.calib),
         calib_images=CALIB_LIMIT,
+        optimization_level=level,  # 0 = no accuracy recovery: the DFC drops to it without a GPU (docs/problems.md)
     )
 
 
