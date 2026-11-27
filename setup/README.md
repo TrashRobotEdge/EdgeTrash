@@ -13,7 +13,7 @@
 
 ## Class day runbook (Pi)
 1. **Flash** with Raspberry Pi Imager: *Raspberry Pi OS (64-bit)*, Trixie ([ADR 0001](../docs/decisions/0001-one-os-raspberry-pi-os.md)). In *OS customisation*: hostname (`pi4-trash`, `pi5-trash`), user + password, **Wi-Fi = the phone hotspot** we use in class, **enable SSH**.
-2. **On the laptop (VM):** `bash setup/bundle.sh` → `edgetrash-bundle.tar` (repo + model files + eval annotations, checksummed). No COCO images: the Pi fetches them (~5 min, checksums checked). Copy it to a USB stick.
+2. **On the laptop (VM):** `bash setup/bundle.sh` → `edgetrash-bundle.tar` (repo + model files + eval annotations, checksummed). No COCO images: the Pi fetches them (~1 min on the VM's network, checksums checked). Copy it to a USB stick.
    - A USB cable between Pi and laptop is *not* a file link out of the box (on the Pi 5 that port is power). Use a stick, or `scp edgetrash-bundle.tar <user>@<pi>.local:~` over the hotspot.
 3. **On the Pi** (keyboard or `ssh <user>@<pi>.local`):
    ```bash
@@ -25,15 +25,16 @@
    ```bash
    cd ~/EdgeTrash && nohup .venv/bin/python bench/sweep.py --config bench/configs/<config>.yaml > sweep.log 2>&1 &
    ```
+   Wait for it to finish (`tail sweep.log`) before the next steps: they must not run during a measurement.
 5. **Hailo only, once per `.hef`:** save where its NMS runs and its thresholds (protocol §3):
    ```bash
    mkdir -p results/raw/pi5-hailo/hef && for f in models/files/*-hailo.hef; do hailortcli parse-hef "$f" > results/raw/pi5-hailo/hef/$(basename "$f" .hef).txt; done
    ```
-   **Accuracy on the device** (protocol step 6.4), per variant:
+6. **Accuracy on the device** (protocol step 6.4), per variant:
    ```bash
    .venv/bin/python bench/accuracy.py --device <device> --variant <v> --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
    ```
-6. **Bring results back** (on the laptop), then commit them:
+7. **Bring results back** (on the laptop), then commit them:
    ```bash
    scp -r <user>@<pi>.local:~/EdgeTrash/results/raw/<device> results/raw/
    scp <user>@<pi>.local:~/EdgeTrash/models/manifest.yaml models/manifest.yaml   # only if you ran compile_tvm.py on the Pi
