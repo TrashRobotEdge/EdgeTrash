@@ -19,13 +19,22 @@ Edge AI project (Université Côte d'Azur, G. Rocher). Robot counterpart: **[Tra
 | `docs/` | `protocol.md` (8 steps), `hardware/` spec sheets, decisions, problems, journal |
 | `report/` | LaTeX report (≤15 pages), professor's outline |
 
-## Quick start
+## Quick start: clone to figures (VM, Ubuntu 22.04)
 ```bash
-bash setup/setup.sh                     # asks which config this machine is, installs it, runs a smoke test
+gh repo clone TrashRobotEdge/EdgeTrash -- -b benchmark-kit   # or git clone -b benchmark-kit https://github.com/TrashRobotEdge/EdgeTrash.git
+cd EdgeTrash
+bash setup/setup.sh --config vm-dev   # ~7 min. Say yes to the COCO download (1 GB). The smoke test fails here: no model files yet
+source .venv/bin/activate && unset PYTHONPATH   # every new shell. unset: a sourced ROS leaks its packages in and breaks pytest
+bash bench/dryrun.sh models    # ~20 min: builds every model file into models/files/
+bash bench/dryrun.sh measure   # ~50 min: accuracy, latency, results/summary.csv, results/accuracy.csv, results/figures/
 ```
-Class-day runbook (Pis, USB bundle, Hailo compiler): [setup/README.md](setup/README.md).
+- `-b benchmark-kit`: until PR #46 is merged.
+- Ubuntu has no `python` command, only `python3`. Inside the venv, `python` works.
+- Ubuntu 24.04 host: use the 22.04 VM. ROS Humble and the Hailo compiler (Python 3.10) need 22.04.
+- Pis (USB bundle, class-day runbook) and the Hailo compiler: [setup/README.md](setup/README.md).
 
 ## Reproduce one configuration
+With the venv active and model files built (above):
 ```bash
 python bench/run.py --config bench/configs/<device>.yaml --variant <variant> --rep 0     # one run
 python bench/sweep.py --config bench/configs/<device>.yaml                              # idle + all variants x 5 reps

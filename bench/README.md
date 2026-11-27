@@ -3,6 +3,8 @@
 - **L1 (here):** ROS-free, the same replayed frames on every device. Timer = frame in RAM → boxes after NMS, per stage. System monitor (and Pi 5 PMIC power) logged in parallel on the same clock.
 - **L2 (TrashLocalisation):** inside ROS on the robot. Timer = image `header.stamp` → `cmd_vel` publish.
 
+Run from the repo root with the venv active and `PYTHONPATH` unset ([README](../README.md#quick-start-clone-to-figures-vm-ubuntu-2204)).
+
 Rules and every number: [docs/protocol.md](../docs/protocol.md). Device settings: `configs/<device>.yaml` (frames, warm-up, duration, reps, variants).
 
 | Command | What | Output |
