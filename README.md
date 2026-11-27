@@ -9,7 +9,7 @@ Edge AI project (Université Côte d'Azur, G. Rocher). Robot counterpart: **[Tra
 ## Layout
 | Folder | What |
 |---|---|
-| `edgetrash/` | ROS-free inference library: preprocess → infer → postprocess per backend, with per-stage timers. Also used by the robot's `trash_detector` node ([ADR 0001](https://github.com/TrashRobotEdge/TrashLocalisation/blob/main/docs/decisions/0001-two-repos-shared-inference-lib.md)) |
+| `edgetrash/` | ROS-free inference library: preprocess → infer → postprocess per backend, with per-stage timers. Also used by the robot's `trash_detector` node ([TL ADR 0001](https://github.com/TrashRobotEdge/TrashLocalisation/blob/main/docs/decisions/0001-two-repos-shared-inference-lib.md)) |
 | `bench/` | L1 benchmark harness (replayed frames, every device), configs, analysis |
 | `setup/` | **one setup script for every device** (`setup.sh`) + the USB bundle for the Pis |
 | `results/raw/` | Every raw log/CSV we measured (kept in git: small, needed to reproduce figures) |
