@@ -99,8 +99,11 @@ def main():
         calib_dir.mkdir()
         for p in read_list(args.calib)[:CALIB_LIMIT]:
             (calib_dir / p.name).symlink_to(p)
+        hailomz = Path(sys.executable).parent / "hailomz"  # the venv's own CLI, activated or not
+        if not hailomz.exists():
+            raise SystemExit(f"{hailomz} not found: run this with .venv-hailo/bin/python (setup.sh --config vm-hailo)")
         cmd = [
-            str(Path(sys.executable).parent / "hailomz"),  # the venv's own CLI, activated or not
+            str(hailomz),
             "compile",
             ZOO_NAME[v["arch"]],
             "--ckpt",

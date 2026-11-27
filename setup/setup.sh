@@ -36,6 +36,7 @@ SUDO="sudo"; [[ $YES == 1 ]] && SUDO="sudo -n"
 
 pick_config() {
   [[ -n "$CONFIG" ]] && return
+  [[ -t 0 ]] || die "no terminal to ask which config: pass --config <one of: ${CONFIGS[*]}>"
   echo "Which config is this machine? (details: setup/README.md)"
   select CONFIG in "${CONFIGS[@]}"; do [[ -n "$CONFIG" ]] && break; done
 }

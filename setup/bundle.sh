@@ -35,6 +35,7 @@ cat > "$B/install.sh" <<'EOF'
 # On the Pi: clone/update ~/EdgeTrash from the bundle, copy models + frames, run setup.
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+command -v git >/dev/null || { echo "[XX] git missing: sudo apt install git, then re-run this script"; exit 1; }
 DEST="${EDGETRASH_DIR:-$HOME/EdgeTrash}"
 (cd "$HERE" && sha256sum -c --quiet SHA256SUMS) || { echo "[XX] bundle corrupted: copy it again"; exit 1; }
 if [[ -d "$DEST/.git" ]]; then

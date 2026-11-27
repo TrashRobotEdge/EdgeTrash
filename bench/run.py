@@ -31,8 +31,17 @@ def load_config(path: Path) -> dict:
 
 
 def load_frames(cfg: dict) -> list:
-    paths = [REPO / p.strip() for p in (REPO / cfg["frames"]).read_text().splitlines() if p.strip()]
-    return [cv2.imread(str(p)) for p in paths[: cfg.get("n_frames", len(paths))]]
+    lst = REPO / cfg["frames"]
+    if not lst.exists():
+        raise SystemExit(f"{lst} missing: on the VM run bash setup/setup.sh --config vm-dev (writes the COCO splits)")
+    paths = [REPO / p.strip() for p in lst.read_text().splitlines() if p.strip()][: cfg.get("n_frames", None)]
+    frames = [cv2.imread(str(p)) for p in paths]
+    if missing := [p for p, f in zip(paths, frames, strict=True) if f is None]:
+        raise SystemExit(
+            f"{len(missing)}/{len(paths)} frames unreadable, e.g. {missing[0]}: "
+            "on the VM say yes to the COCO download (setup.sh --config vm-dev), on a Pi re-run the bundle's install.sh"
+        )
+    return frames
 
 
 def out_dir(device: str, name: str, rep: int | None) -> Path:

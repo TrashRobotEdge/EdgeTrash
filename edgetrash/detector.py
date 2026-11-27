@@ -81,12 +81,15 @@ def read_manifest(path: Path = MANIFEST) -> dict:
 
 def load_variant(name: str, conf=0.25, iou=0.45, max_det=300, manifest=MANIFEST, model_dir=MODEL_DIR) -> Detector:
     """Build the Detector for one variant of models/manifest.yaml, after checking the file's checksum."""
-    v = read_manifest(manifest)[name]
+    variants = read_manifest(manifest)
+    if name not in variants:
+        raise KeyError(f"unknown variant {name!r}: not in {manifest} (check the spelling, or build it: models/README.md)")
+    v = variants[name]
     path = None
     if v.get("file"):
         path = Path(model_dir) / v["file"]
         if not path.exists():
-            raise FileNotFoundError(f"{path} missing: copy it into {model_dir} (see models/README.md)")
+            raise FileNotFoundError(f"{path} missing: on the VM build it (bash bench/dryrun.sh models), on a Pi copy it (setup/bundle.sh)")
         if v.get("sha256") and sha256(path) != v["sha256"]:
             raise ValueError(f"{path} checksum differs from manifest: wrong or corrupted file")
     head_opts = {"normalized": v.get("normalized_boxes", False)}

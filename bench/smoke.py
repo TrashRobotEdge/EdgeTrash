@@ -35,7 +35,7 @@ def main():
             failed.append(v)
             print(f"[FAIL] {v}\n{traceback.format_exc(limit=3)}")
     for v in missing:
-        print(f"[--]   {v:42} no model file yet (copy it into models/files/)")
+        print(f"[--]   {v:42} no model file: VM -> bash bench/dryrun.sh models, Pi -> USB bundle (setup/README.md)")
     sys.exit(1 if failed else 0)
 
 
