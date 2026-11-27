@@ -93,7 +93,7 @@ variants:
       python: 3.10.12
   yolov8n-coco-640-fp32-tflite:
     file: yolov8n-coco-640-fp32-tflite.tflite
-    sha256: 5a55721ce651e5256109dbbd35eadf07e499b0e4377fbae557cad02b7d10b8c2
+    sha256: 41050090b8dacb5af74d195bac33516cacd407085e54920a2cd08f77dc99e8e7
     size_mb: 12.84
     backend: tflite
     precision: fp32
@@ -103,9 +103,8 @@ variants:
     input_size: 640
     head: yolo
     classes: coco80
-    made_by: python models/export.py --arch yolov8n --to onnx-fp32 onnx-int8 tflite-fp32
-      tflite-int8 --calib data/splits/coco-calib.txt
-    made_at: '2026-11-26T13:06:37Z'
+    made_by: python models/export.py --arch yolov8n --to tflite-fp32
+    made_at: '2026-11-27T14:55:39Z'
     versions:
       python: 3.10.12
       ultralytics: 8.4.219
@@ -115,8 +114,7 @@ variants:
       onnxruntime: 1.23.2
       litert-torch: 0.10.0
       ai-edge-litert: 2.3.0
-      tensorflow: 2.19.1
-      onnx2tf: 1.28.8
+      ai-edge-quantizer: 0.10.1
   yolov8n-coco-640-int8-tflite:
     file: yolov8n-coco-640-int8-tflite.tflite
     sha256: b43719d74c262542ee0a8061e86eff73821d826343c3f87007b44ce219e33a01
