@@ -24,6 +24,9 @@ from edgetrash.detector import read_manifest
 ZOO_NAME = {"yolov8n": "yolov8n", "yolo11n": "yolov11n"}  # yolov5nu / ssdlite: no zoo recipe (docs/problems.md)
 CALIB_LIMIT = 200
 OPT_LEVEL = re.compile(r"Reducing optimization level to (\d)")  # the DFC's own warning
+# Zoo v2.17 recipes (yolov8n, yolov11n .alls): nms_postprocess(..., engine=cpu), nms_scores_th 0.2, nms_iou_th 0.7.
+# Baked into the .hef: boxes under 0.2 never reach us, and the NMS runs in HailoRT on the Pi's CPU, not on the chip.
+HAILO_NMS = {"nms_scores_th": 0.2, "nms_engine": "cpu"}
 CALIB_USED = re.compile(r"Using dataset with (\d+) entries for calibration")  # the zoo recipe may use fewer than we give
 HEAD_CONV = re.compile(r"/model\.\d+/(cv[23])\.(\d)/cv[23]\.\d\.2/Conv")
 ZOO_URL = "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.17.0/{hw}/{name}.hef"  # Model Zoo v2.17 docs
@@ -78,6 +81,7 @@ def fetch_zoo(arch: str, hw: str) -> None:
         input_size=640,
         head="hailo_nms",
         classes="coco80",
+        **HAILO_NMS,
     )
 
 
@@ -138,6 +142,7 @@ def main():
         input_size=v["input_size"],
         head="hailo_nms",
         classes=v["classes"],
+        **HAILO_NMS,
         calib=str(args.calib),
         calib_images=n_calib,  # what the DFC used, not the CALIB_LIMIT we linked
         optimization_level=level,  # 0 = no accuracy recovery: the DFC drops to it without a GPU (docs/problems.md)

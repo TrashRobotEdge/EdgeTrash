@@ -3,7 +3,7 @@
 One decoder per output format ("head" in models/manifest.yaml):
 - yolo: Ultralytics head (YOLOv5u/v8/11), one tensor (1, 4 + classes, anchors), boxes cx cy w h
 - ssd: our SSDLite export, (1, A, 4) box deltas + (1, A, 1 + classes) logits, anchors in a .npy
-- hailo_nms: the Hailo NMS layer already ran on chip, per class (k, 5) y0 x0 y1 x1 score in [0, 1]
+- hailo_nms: Hailo's NMS already ran (in HailoRT, on the host CPU), per class (k, 5) y0 x0 y1 x1 score in [0, 1]
 """
 
 import cv2

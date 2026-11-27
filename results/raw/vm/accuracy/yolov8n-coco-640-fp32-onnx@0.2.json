@@ -1,0 +1,44 @@
+{
+  "variant": "yolov8n-coco-640-fp32-onnx",
+  "split": "data/splits/coco-eval.txt",
+  "n_images": 500,
+  "min_score": 0.2,
+  "map50_95": 0.3516,
+  "map50": 0.4682,
+  "conf": 0.25,
+  "precision": 0.7126,
+  "recall": 0.5028,
+  "f1": 0.5896,
+  "backend": {
+    "runtime": "onnxruntime",
+    "version": "1.23.2",
+    "threads": 4
+  },
+  "meta": {
+    "commit": "652c45011dd5d718fa5f516849ff67e232b918ef",
+    "dirty": [
+      "bench/accuracy.py",
+      "bench/analyze.py",
+      "bench/dryrun.sh",
+      "bench/meta.py",
+      "docs/problems.md",
+      "docs/protocol.md",
+      "edgetrash/backends/hailo_backend.py",
+      "edgetrash/postprocess.py",
+      "models/common.py",
+      "models/compile_hailo.py",
+      "models/export.py",
+      "models/manifest.yaml",
+      "setup/README.md"
+    ],
+    "command": "python bench/accuracy.py --device vm --variant yolov8n-coco-640-fp32-onnx --min-score 0.2 --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json",
+    "utc": "2026-11-27T14:28:34Z",
+    "host": "Autonomous-Systems",
+    "machine": "x86_64",
+    "os": "Ubuntu 22.04.5 LTS",
+    "kernel": "6.8.0-149-generic",
+    "python": "3.10.12",
+    "model": null,
+    "governor": null
+  }
+}

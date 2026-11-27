@@ -85,6 +85,8 @@ variants:
     input_size: 640
     head: hailo_nms
     classes: coco80
+    nms_scores_th: 0.2
+    nms_engine: cpu
     made_by: python models/compile_hailo.py --zoo yolov8n
     made_at: '2026-11-26T13:18:20Z'
     versions:
@@ -459,6 +461,8 @@ variants:
     input_size: 640
     head: hailo_nms
     classes: coco80
+    nms_scores_th: 0.2
+    nms_engine: cpu
     calib: data/splits/coco-calib.txt
     calib_images: 64
     optimization_level: '0'

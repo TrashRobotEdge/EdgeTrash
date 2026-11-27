@@ -3,8 +3,12 @@
     python bench/accuracy.py --device vm --variant yolov8n-coco-640-fp32-onnx \
         --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
 
-Writes results/raw/<device>/accuracy/<variant>.json: mAP@0.5:0.95, mAP@0.5 (COCO tools, conf 0.001),
-and precision / recall / F1 at the operating threshold (--conf, IoU 0.5).
+Writes results/raw/<device>/accuracy/<variant>.json: mAP@0.5:0.95, mAP@0.5 (COCO tools, all boxes
+above --min-score), and precision / recall / F1 at the operating threshold (--conf, IoU 0.5).
+
+--min-score: 0.001 (COCO protocol), or the .hef's nms_scores_th for Hailo variants (boxes under it never
+leave the device). Their FP32 reference must be scored the same way (written as <variant>@<min-score>.json):
+    python bench/accuracy.py --device vm --variant yolov8n-coco-640-fp32-onnx --min-score 0.2 --split ... --ann ...
 """
 
 import argparse
@@ -21,6 +25,8 @@ from pycocotools.cocoeval import COCOeval
 from edgetrash import load_variant
 from edgetrash.detector import read_manifest
 from meta import RAW, REPO, run_meta
+
+COCO_MIN_SCORE = 0.001  # COCO protocol: keep (almost) every box for mAP
 
 
 def category_ids(classes, coco: COCO) -> list[int]:
@@ -77,6 +83,7 @@ def main():
     ap.add_argument("--split", type=Path, required=True, help="image list, one path per line")
     ap.add_argument("--ann", type=Path, required=True, help="COCO-format annotations json")
     ap.add_argument("--conf", type=float, default=0.25, help="operating threshold for P/R/F1")
+    ap.add_argument("--min-score", type=float, help="lowest score kept for mAP (default: the variant's nms_scores_th, else 0.001)")
     args = ap.parse_args()
 
     with contextlib.redirect_stdout(io.StringIO()):
@@ -84,7 +91,8 @@ def main():
     by_file = {im["file_name"]: im["id"] for im in coco.dataset["images"]}
     v = read_manifest()[args.variant]
     cats = category_ids(v["classes"], coco)
-    det = load_variant(args.variant, conf=0.001, max_det=300)  # COCO protocol: low threshold for mAP
+    min_score = args.min_score if args.min_score is not None else v.get("nms_scores_th", COCO_MIN_SCORE)
+    det = load_variant(args.variant, conf=min_score, max_det=300)
 
     paths = [REPO / line.strip() for line in args.split.read_text().splitlines() if line.strip()]
     results, image_ids = [], []
@@ -105,6 +113,7 @@ def main():
         "variant": args.variant,
         "split": str(args.split),
         "n_images": len(paths),
+        "min_score": min_score,
         "map50_95": round(float(ev.stats[0]), 4),
         "map50": round(float(ev.stats[1]), 4),
         "conf": args.conf,
@@ -114,7 +123,8 @@ def main():
         "backend": det.backend.info(),
         "meta": run_meta(),
     }
-    dest = RAW / args.device / "accuracy" / f"{args.variant}.json"
+    suffix = "" if min_score == v.get("nms_scores_th", COCO_MIN_SCORE) else f"@{min_score}"
+    dest = RAW / args.device / "accuracy" / f"{args.variant}{suffix}.json"
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_text(json.dumps(out, indent=2))
     print(json.dumps({k: out[k] for k in ("variant", "map50_95", "map50", "precision", "recall", "f1")}))

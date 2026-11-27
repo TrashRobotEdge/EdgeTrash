@@ -1,6 +1,7 @@
 """Hailo-8L through HailoRT 4.23 (apt package python3-hailort on Raspberry Pi OS).
-Our .hef files are compiled with the on-chip NMS (models/compile_hailo.py), so the
-output is per-class boxes: head "hailo_nms"."""
+The .hef files carry Hailo's NMS (models/compile_hailo.py), so the output is per-class boxes:
+head "hailo_nms". That NMS runs in HailoRT on the Pi's CPU (zoo recipe engine=cpu), inside
+infer(): infer_ms = chip + host NMS. Scores under the .hef's nms_scores_th (0.2) are dropped."""
 
 import hailo_platform as hp
 

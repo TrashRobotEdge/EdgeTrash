@@ -22,6 +22,8 @@ elif [[ "${1:-}" == measure ]]; then  # accuracy on 500 COCO images, then latenc
 for v in $(grep -E '^\s+- ' bench/configs/vm-dev.yaml | awk '{print $2}' | grep -v '^hsv-'); do
   $PY bench/accuracy.py --device vm --variant "$v" --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
 done
+# FP32 reference for the Hailo .hef files, scored like them: boxes under 0.2 dropped (protocol §3)
+$PY bench/accuracy.py --device vm --variant yolov8n-coco-640-fp32-onnx --min-score 0.2 --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
 $PY bench/sweep.py --config bench/configs/vm-dev.yaml
 $PY bench/analyze.py
 else

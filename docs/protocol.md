@@ -61,8 +61,10 @@ We produce abacuses that link a config (model × optimisation × device) to late
 
 Hailo and OAK accept one precision each, so "precision" and "device" are partly confounded: say so in the report (p.35 "comparing different precisions without saying so").
 
+**Hailo NMS runs on the Pi's CPU, not on the chip.** The zoo recipes we compile with say `nms_postprocess(..., engine=cpu)`: HailoRT does the NMS on the host, inside our `infer_ms` (p.19, p.35: no hidden CPU fallback). The `.hef` also drops boxes scoring under 0.2 (`nms_scores_th` in the manifest), so its mAP is compared with the FP32 reference **scored at 0.2 too** (`accuracy.py` reads it from the manifest; `analyze.py` matches the reference by min score). Checked per `.hef` on class day: `hailortcli parse-hef` output saved next to the results.
+
 ## 4. Metrics (p.7–9, p.25)
-- **L1 pipeline latency** (`bench/run.py`): timer start = frame decoded in RAM, timer stop = detections in frame pixels after NMS. Three stages timed with `time.perf_counter`: pre-processing, inference (includes host↔accelerator transfer for Hailo/OAK, p.6), post-processing. No camera, so this is not end-to-end (p.9).
+- **L1 pipeline latency** (`bench/run.py`): timer start = frame decoded in RAM, timer stop = detections in frame pixels after NMS. Three stages timed with `time.perf_counter`: pre-processing, inference (includes host↔accelerator transfer for Hailo/OAK, p.6, and Hailo's host-side NMS, §3), post-processing. No camera, so this is not end-to-end (p.9).
 - **L2 end-to-end latency** (TrashLocalisation): image `header.stamp` → `cmd_vel` published, on the robot config, no sim time.
 - **Percentiles:** p50, p95, p99 per run (p.34). Never the mean alone (p.35).
 - **Throughput:** single stream, no overlap, so FPS = frames / steady time ≈ 1 / latency (p.9).

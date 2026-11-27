@@ -126,14 +126,20 @@ def reference(variant: str) -> str:
 
 
 def accuracy_table() -> pd.DataFrame:
-    rows = [json.loads(p.read_text()) | {"device": p.parent.parent.name} for p in RAW.glob("*/accuracy/*.json")]
+    # <variant>@<min score>.json = a reference scored like a Hailo .hef (accuracy.py), not a result of its own
+    rows = [json.loads(p.read_text()) | {"device": p.parent.parent.name, "ref_only": "@" in p.stem} for p in RAW.glob("*/accuracy/*.json")]
     if not rows:
         return pd.DataFrame()
-    acc = pd.DataFrame(rows)[["device", "variant", "map50_95", "map50", "precision", "recall", "f1", "n_images"]]
-    ref = acc.groupby("variant").map50_95.max()
+    acc = pd.DataFrame(rows)
+    acc["min_score"] = acc["min_score"].fillna(0.001) if "min_score" in acc else 0.001  # files written before the field existed
+    acc = acc[["device", "variant", "ref_only", "min_score", "map50_95", "map50", "precision", "recall", "f1", "n_images"]]
+    # Reference scored at the same min score: a Hailo .hef drops boxes under 0.2, its FP32 reference must too
+    ref = acc.groupby(["variant", "min_score"]).map50_95.max()
     acc["reference"] = acc.variant.map(reference)
-    acc["drop_points"] = [round(100 * (ref.get(r, np.nan) - m), 2) for r, m in zip(acc.reference, acc.map50_95, strict=True)]
-    acc["gate_pass"] = acc.drop_points <= GATE_POINTS
+    acc["drop_points"] = [
+        round(100 * (ref.get((r, s), np.nan) - m), 2) for r, s, m in zip(acc.reference, acc.min_score, acc.map50_95, strict=True)
+    ]
+    acc["gate_pass"] = acc.drop_points.le(GATE_POINTS).where(acc.drop_points.notna())  # empty = no reference at that min score
     return acc.sort_values(["device", "variant"])
 
 
@@ -238,7 +244,7 @@ def fig_pareto(device: str, summary: pd.DataFrame, acc: pd.DataFrame, label: str
     so a device without its own accuracy runs uses the VM's (said in the title)."""
     s = summary[summary.device == device][["variant", "p95_ms"]]
     own = (acc.device == device).any()
-    a = acc[acc.device == device] if own else acc
+    a = acc[(acc.device == device) & ~acc.ref_only] if own else acc[~acc.ref_only]
     d = s.merge(a.groupby("variant").map50_95.first().reset_index(), on="variant").sort_values("p95_ms")
     if d.empty:
         return

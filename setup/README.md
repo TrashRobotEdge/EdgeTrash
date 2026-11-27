@@ -25,7 +25,11 @@
    ```bash
    cd ~/EdgeTrash && nohup .venv/bin/python bench/sweep.py --config bench/configs/<config>.yaml > sweep.log 2>&1 &
    ```
-5. **Accuracy on the device** (protocol step 6.4), per variant:
+5. **Hailo only, once per `.hef`:** save where its NMS runs and its thresholds (protocol §3):
+   ```bash
+   mkdir -p results/raw/pi5-hailo/hef && for f in models/files/*-hailo.hef; do hailortcli parse-hef "$f" > results/raw/pi5-hailo/hef/$(basename "$f" .hef).txt; done
+   ```
+   **Accuracy on the device** (protocol step 6.4), per variant:
    ```bash
    .venv/bin/python bench/accuracy.py --device <device> --variant <v> --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
    ```
