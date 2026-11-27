@@ -26,7 +26,7 @@ shopt -s nullglob
 for f in models/files/*.{onnx,tflite,hef,blob,so,npy}; do cp "$f" "$B/files/"; done
 .venv/bin/python data/coco_eval.py make >/dev/null
 mkdir -p "$B/data/data/coco/annotations" && cp data/coco/annotations/coco-eval-subset.json "$B/data/data/coco/annotations/"
-for list in $(grep -h '^frames:' bench/configs/*.yaml | awk '{print $2}' | sort -u); do
+for list in $(grep -h '^frames:' bench/protocol.yaml bench/configs/*.yaml | awk '{print $2}' | sort -u); do
   [[ -f "$list" ]] || continue
   while read -r img; do  # COCO frames are fetched on the Pi, ours (captures) travel in the bundle
     [[ -n "$img" && -f "$img" && "$img" != data/coco/* ]] && mkdir -p "$B/data/$(dirname "$img")" && cp "$img" "$B/data/$img"

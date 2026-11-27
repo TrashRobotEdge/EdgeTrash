@@ -1,17 +1,7 @@
 device: vm
 label: "Pipeline dry run on the VM (COCO weights, 30 s x 3 reps): checks the code, not a device result"
-frames: data/splits/coco-bench.txt   # replayed frames, same list on every device (dry run: COCO; then our OAK captures)
-n_frames: 100
-warmup_frames: 50                    # discarded from stats, kept in frames.csv (protocol step 6)
-duration_s: 30                 # steady state, at least...
-min_frames: 300                      # ...and at least this many frames
-idle_s: 60
-sample_period_s: 0.5                 # system monitor / PMIC
-reps: 3
-cooldown_s: 10
-governor: performance
-conf: 0.25                           # operating threshold (protocol step 4)
-iou: 0.45
+duration_s: 30                       # protocol.yaml: 60. Dry run only (see label)
+reps: 3                              # protocol.yaml: 5
 variants:
   - yolov8n-coco-640-fp32-onnx
   - yolov8n-coco-640-int8-onnx

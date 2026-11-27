@@ -1,17 +1,5 @@
 device: pi5-hailo
 label: null
-frames: data/splits/coco-bench.txt   # replayed frames, same list on every device (dry run: COCO; then our OAK captures)
-n_frames: 100
-warmup_frames: 50                    # discarded from stats, kept in frames.csv (protocol step 6)
-duration_s: 60                 # steady state, at least...
-min_frames: 300                      # ...and at least this many frames
-idle_s: 60
-sample_period_s: 0.5                 # system monitor / PMIC
-reps: 5
-cooldown_s: 10
-governor: performance
-conf: 0.25                           # operating threshold (protocol step 4)
-iou: 0.45
 variants:
   - yolov8n-coco-640-int8-hailo         # ours, models/compile_hailo.py (needs the DFC)
   - yolov8n-zoo-640-int8-hailo          # Hailo's pre-compiled reference, not our model

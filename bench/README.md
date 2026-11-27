@@ -5,7 +5,7 @@
 
 Run from the repo root with the venv active and `PYTHONPATH` unset ([README](../README.md#quick-start-clone-to-figures-vm-ubuntu-2204)).
 
-Rules and every number: [docs/protocol.md](../docs/protocol.md). Device settings: `configs/<device>.yaml` (frames, warm-up, duration, reps, variants).
+Rules and every number: [docs/protocol.md](../docs/protocol.md). Settings: `protocol.yaml` (frames, warm-up, duration, reps: same on every device) + `configs/<device>.yaml` (variants, and any override).
 
 | Command | What | Output |
 |---|---|---|

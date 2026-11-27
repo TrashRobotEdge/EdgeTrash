@@ -27,7 +27,8 @@ from monitor import Monitor
 
 
 def load_config(path: Path) -> dict:
-    return yaml.safe_load(Path(path).read_text())
+    """bench/protocol.yaml (shared by every device) + the device config, which wins where both set a value."""
+    return yaml.safe_load((REPO / "bench/protocol.yaml").read_text()) | yaml.safe_load(Path(path).read_text())
 
 
 def load_frames(cfg: dict) -> list:
