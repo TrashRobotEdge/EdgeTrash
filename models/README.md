@@ -2,6 +2,8 @@
 
 **No model files in git.** They live in `models/files/` (ignored). Each one is listed in `manifest.yaml` (in git) with its SHA-256, size, settings, tool versions and **the exact command that built it**. `edgetrash` refuses to load a file whose checksum doesn't match. To move files to a Pi: `setup/bundle.sh` ([setup/README.md](../setup/README.md)).
 
+**Download** (no need to rebuild): `gh release download models-v1 -R TrashRobotEdge/EdgeTrash -D models/files && (cd models/files && sha256sum -c SHA256SUMS)`. Release `models-v1` = `yolov8n-coco-640-fp32-onnx`, used by TrashLocalisation.
+
 Variant name = `<arch>-<weights>-<input size>-<precision>-<runtime>`, e.g. `yolov8n-coco-640-int8-tflite`. `weights` = `coco` (pretrained), `zoo` (vendor file), our tag (e.g. `cans`), `_p<N>` = N % of MACs pruned.
 
 | Step | Command (VM) | Gives |
