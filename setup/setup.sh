@@ -104,6 +104,9 @@ pi5_hailo() {
   check_board 5
   need_venv
   apt_install python3-dev dkms hailo-all
+  # HailoRT version is a fixed factor (protocol): a routine apt upgrade must not move it
+  $SUDO apt-mark hold hailort python3-hailort hailort-pcie-driver >/dev/null && ok "apt: HailoRT held at $(dpkg-query -W -f='${Version}' hailort)" ||
+    warn "apt-mark hold failed: package names unverified, check dpkg -l | grep hailo and fix setup.sh"
   hailortcli fw-control identify &>/dev/null || die "Hailo not answering. First install needs a reboot: sudo reboot, then re-run this script"
   ok "hailo: $(hailortcli fw-control identify | grep -i -E 'firmware version|device architecture' | tr -s ' ' | paste -sd' ')"
   echo "  PCIe link (recorded, not changed: docs/protocol.md step 5): $($SUDO lspci -vv 2>/dev/null | grep -A40 -i hailo | grep -m1 LnkSta: | xargs || echo unknown)"
@@ -135,7 +138,7 @@ vm_dev() {
   need_venv
   apt_install python3-dev
   make_venv "$REPO/.venv"
-  pip_extras "models,onnx,tflite,oak,bench,dev" --extra-index-url "$TORCH_INDEX"  # no tvm: conflicts with litert-torch
+  pip_extras "models,onnx,tflite,bench,dev" --extra-index-url "$TORCH_INDEX"  # no tvm: conflicts with litert-torch. No oak: no OAK on the VM
   (cd "$REPO" && .venv/bin/pre-commit install >/dev/null && ok "pre-commit hook installed")
   if [[ ! -d "$REPO/data/coco/val2017" ]]; then
     local yn=y; [[ $YES == 1 ]] || read -r -p "  Download COCO val2017 (1 GB) for the dry run? [y/N] " yn
