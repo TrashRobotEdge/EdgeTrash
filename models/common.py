@@ -37,10 +37,15 @@ def register(name: str, file: Path | None, packages: tuple[str, ...] = (), **ent
     variants = data.setdefault("variants", {})
     if file is not None:
         entry = {"file": file.name, "sha256": sha256(file), "size_mb": round(file.stat().st_size / 1e6, 2), **entry}
-    entry["made_by"] = "python " + shlex.join(sys.argv)
-    entry["made_at"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rel = [str(Path(a).relative_to(REPO)) if Path(a).is_absolute() and Path(a).is_relative_to(REPO) else a for a in sys.argv]
+    entry["made_by"] = "python " + shlex.join(rel)  # repo paths relative: same string on every machine
     entry["versions"] = versions(*packages)
-    variants[name] = entry
+    old = {k: v for k, v in variants.get(name, {}).items() if k != "made_at"}
+    if old == entry:  # same file, same command, same tools: keep the entry (and its date) as it is
+        print(f"[manifest] {name} unchanged")
+        return
+    made_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    variants[name] = {**{k: v for k, v in entry.items() if k != "versions"}, "made_at": made_at, "versions": entry["versions"]}
     MANIFEST.write_text(yaml.safe_dump(data, sort_keys=False))
     print(f"[manifest] {name}")
 

@@ -2,6 +2,8 @@
 
 One entry per real problem. The professor grades the **diagnosis and alternatives**, not the absence of problems.
 
+Numbers marked *(one-off check)* come from one interactive check, with no script or results file behind them: they back a decision here, they are never report results.
+
 ## Template
 ### YYYY-MM-DD: short title (issue #N)
 - **Symptom:** what we saw
@@ -48,21 +50,21 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Symptom:** `IndexError: index 384 is out of bounds for dimension 0 with size 256` in `pruner.step()`.
 - **Diagnosis:** Ultralytics' C2f block splits a tensor with `chunk()`; torch-pruning's dependency graph loses track of which channels go where.
 - **Alternatives:** unstructured pruning (no speed-up on dense runtimes) · rewrite C2f without `chunk()` (what torch-pruning's YOLOv8 example does).
-- **Chosen:** `SplitC2f` in `models/common.py`: the first conv split into two convs. Checked to give exactly the same output as the original model (max abs difference 0.0 on a random 640×640 input) before pruning.
+- **Chosen:** `SplitC2f` in `models/pruning.py`: the first conv split into two convs. Checked to give exactly the same output as the original model (max abs difference 0.0 on a random 640×640 input, *one-off check*) before pruning.
 
 ### 2026-11-26: TVM and the TFLite exporter can't share the VM's environment (benchmark kit)
 - **Symptom:** `import tvm` failed: `cannot import name 'get_annotations' from 'typing_extensions'` (4.12.2 installed).
 - **Diagnosis:** `pip check`: apache-tvm-ffi needs typing_extensions ≥ 4.13, while litert-torch → `ai-edge-litert[model-utils]` → `xdsl==0.28.0` needs < 4.13.
 - **First fix, wrong:** pin 4.16.0 because a TFLite export still ran. A clean `setup.sh --config vm-dev` then failed with `ResolutionImpossible`: forcing a version pip refuses isn't reproducible.
 - **Alternatives:** a separate `.venv-tvm` on the VM · compile TVM where it runs.
-- **Chosen:** TVM only on the Pis (`compile_tvm.py --target pi4|pi5`, run on the Pi), because the `.so` is CPU-specific anyway and the Pis never install litert-torch. Before removing it from the VM, checked the TVM backend once against ONNX Runtime on one image: max abs difference 0.0009 on outputs up to 640 px, same 9 detections.
+- **Chosen:** TVM only on the Pis (`compile_tvm.py --target pi4|pi5`, run on the Pi), because the `.so` is CPU-specific anyway and the Pis never install litert-torch. Before removing it from the VM, checked the TVM backend once against ONNX Runtime on one image: max abs difference 0.0009 on outputs up to 640 px, same 9 detections (*one-off check*).
 - **Same cause, second clash:** `onnx 1.22` needs typing_extensions ≥ 4.15 (pip's report: the only other conflict). Pinned `onnx==1.20.1` (needs ≥ 4.7.1), and every model file was re-exported from a venv built by `setup.sh` alone (`bench/dryrun.sh`).
 
 ### 2026-11-26: SSDLite wouldn't compile for the OAK (benchmark kit)
 - **Symptom:** blobconverter: `Failed to compile layer ".../scale_activation/HardSigmoid": unsupported layer type "HardSigmoid"`.
 - **Diagnosis:** MobileNetV3 uses hard-sigmoid / hard-swish. OpenVINO 2022.1's Myriad X plugin (the last version blobconverter offers for the OAK) has no HardSigmoid layer. This is the "operator support" pitfall (Benchmarking p.19), caught at compile time instead of as a silent CPU fallback.
 - **Alternatives:** drop SSDLite on the OAK · rewrite the activations with ops the VPU has.
-- **Chosen:** at export, `nn.Hardsigmoid` → `relu6(x + 3) / 6` and `nn.Hardswish` → `x · relu6(x + 3) / 6` (`models/ssdlite.py`). Same maths: max abs difference 0.0 on a random input. Used for every runtime, so all SSDLite variants run the same graph.
+- **Chosen:** at export, `nn.Hardsigmoid` → `relu6(x + 3) / 6` and `nn.Hardswish` → `x · relu6(x + 3) / 6` (`models/ssdlite.py`). Same maths: max abs difference 0.0 on a random input (*one-off check*). Used for every runtime, so all SSDLite variants run the same graph.
 - Also: onnx2tf validates its conversion with a sample `.npy` from the working directory and otherwise downloads one that numpy refuses to load (pickled). `export.py` writes that file from 20 of our calibration images instead.
 
 ### 2026-11-26: YOLOv8n ORT INT8 gave mAP 0.0 (benchmark kit, issue #25)
@@ -79,10 +81,10 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 ### 2026-11-26: SSDLite accuracy run took > 18 min (benchmark kit)
 - **Symptom:** `bench/accuracy.py` on SSDLite ran for 18 min without a progress line (stdout is buffered into the log file, so "no line" didn't mean "stuck").
 - **Diagnosis:** profiled one image at the mAP threshold (conf 0.001): 11.7k candidate boxes, 622 ms of 634 ms in OpenCV's `NMSBoxesBatched`, which runs one NMS over all classes at once (cost grows with n²). First guess (too many candidates, add a cap) was wrong: measured 11.7k, below any sensible cap.
-- **Chosen:** one `cv2.dnn.NMSBoxes` per class (same semantics). SSDLite post-processing 736 → 104 ms at conf 0.001; YOLOv8n at the operating threshold (0.25) 1.9 ms.
+- **Chosen:** one `cv2.dnn.NMSBoxes` per class (same semantics). SSDLite post-processing 736 → 104 ms at conf 0.001; YOLOv8n at the operating threshold (0.25) 1.9 ms (*one-off check*).
 
 ### 2026-11-26: pruned YOLOv8n gives mAP 0.0 without fine-tuning (benchmark kit, issue #28)
-- **Symptom:** `yolov8n-coco_p51-640-fp32-onnx` (51 % of the MACs removed): mAP 0.0 on the 500 eval images. Max class score 0.002 vs 0.93 unpruned on the same image.
+- **Symptom:** `yolov8n-coco_p51-640-fp32-onnx` (51 % of the MACs removed): mAP 0.0 on the 500 eval images. Max class score 0.002 vs 0.93 unpruned on the same image (*one-off check*).
 - **Diagnosis:** not a pruning bug. Group by group, the pruned model matches the unpruned one with those channels zeroed (max score diff 4e-7). But zeroing the channels the pruner picks already kills the model, even at the first step (7 % of the MACs: max score 0.01). Likely cause (not verified): a channel with small weights still passes its BatchNorm offset on, and removing it shifts every layer after it, over 47 groups.
 - **Alternatives:** fine-tune after pruning (`prune.py --data`) · prune step by step with a short fine-tune after each · an importance that accounts for BatchNorm.
 - **Chosen:** fine-tune after pruning, on our cans dataset (#28). Not feasible on COCO on the VM's CPU. In the dry run the pruned variant only measures latency, and it fails the quality gate as it should.
@@ -102,4 +104,10 @@ One entry per real problem. The professor grades the **diagnosis and alternative
 - **Symptom:** `hailomz compile yolov8n` on our ONNX: "Error in the last layers of the model, expected conv but found concat layer".
 - **Diagnosis:** the zoo's yolov8n recipe names no end nodes, so the parser guesses them. On Hailo's own 2023 ONNX the guess works; on our Ultralytics 8.4 export it picked `/model.22/Concat` + `Sigmoid` (the decode tail) instead of the head's 6 last convs, where Hailo's on-chip NMS expects to start. The zoo's yolov11 recipes list those 6 convs explicitly.
 - **Chosen:** `compile_hailo.py` reads the 6 convs (`/model.N/cv2|cv3.<scale>/…2/Conv`) from the ONNX and passes `--end-node-names`, same order as the yolov11 recipes. Works for YOLOv8n and YOLO11n without hardcoding the layer index.
-- **Also seen:** on a VM without GPU and with our 200 calibration images (< 1024), the DFC drops to **optimization level 0** (no accuracy recovery, no compression) and the compiler isn't at its "max" performance setting. Our `.hef` may lose more accuracy and run slower than Hailo's zoo `.hef`: measure both on the Pi before comparing. `compile_hailo.py` now records the level in the manifest. Two compiles of the same ONNX gave different `.hef` checksums (32 min each): the manifest checksum, not a rebuild, is what ties a result to its file.
+- **Also seen:** on a VM without GPU and with fewer than 1024 calibration images (we link 200, the DFC uses 64: its default `calibset_size`), the DFC drops to **optimization level 0** (no accuracy recovery, no compression) and the compiler isn't at its "max" performance setting. Our `.hef` may lose more accuracy and run slower than Hailo's zoo `.hef`: measure both on the Pi before comparing. `compile_hailo.py` now records the level in the manifest. Two compiles of the same ONNX gave different `.hef` checksums (32 min each): the manifest checksum, not a rebuild, is what ties a result to its file.
+
+### 2026-11-27: model rebuilds gave new checksums (benchmark kit, issue #20)
+- **Symptom:** rebuilding a YOLO variant from the same weights changed its sha256, so the manifest changed and two teammates' builds clashed.
+- **Diagnosis:** Ultralytics stamps the export time into every file: a `date` entry in the ONNX metadata, a `metadata.json` zip appended to the `.tflite`. Without them, two rebuilds of `yolov8n-coco-640` FP32 ONNX, INT8 ONNX and FP32 TFLite are byte-identical (checked 27/11 in a scratch clone).
+- **Chosen:** `export.py` drops both after export (edgetrash never reads them), and `register()` leaves a manifest entry untouched when file, command and versions are the same.
+- **Still open:** YOLOv8n **INT8 TFLite** differs between rebuilds beyond the date: 24.5k of 3.6M bytes (*one-off check*), so its calibration (Ultralytics + litert-torch) isn't deterministic. Cause not found yet. Until then, as for Hailo `.hef` files: the manifest checksum, not a rebuild, ties a result to its file.

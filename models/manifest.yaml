@@ -460,7 +460,7 @@ variants:
     head: hailo_nms
     classes: coco80
     calib: data/splits/coco-calib.txt
-    calib_images: 200
+    calib_images: 64
     optimization_level: '0'
     made_by: python models/compile_hailo.py --variant yolov8n-coco-640-fp32-onnx --calib
       data/splits/coco-calib.txt

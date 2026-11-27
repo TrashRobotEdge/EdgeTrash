@@ -57,6 +57,25 @@ def ultralytics_export(args, tmp: Path, fmt: str, **opts):
     return model
 
 
+def drop_export_date(path: Path) -> None:
+    """Ultralytics stamps the export time into the file, so every rebuild had a new sha256 (same graph).
+    ONNX: drop the "date" entry. TFLite: drop the metadata.json zip it appends (edgetrash never reads it)."""
+    if path.suffix == ".onnx":
+        import onnx
+
+        model = onnx.load(str(path))
+        keep = [p for p in model.metadata_props if p.key != "date"]
+        del model.metadata_props[:]
+        model.metadata_props.extend(keep)
+        onnx.save(model, str(path))
+    else:
+        import zipfile
+
+        with zipfile.ZipFile(path) as z:
+            start = min(i.header_offset for i in z.infolist())
+        os.truncate(path, start)
+
+
 def calib_yaml(calib: Path, tmp: Path) -> Path:
     """Ultralytics wants a dataset yaml for INT8 calibration: point it at our calibration list."""
     images = tmp / "calib.txt"
@@ -73,6 +92,7 @@ def export_onnx(args, name: str) -> tuple[Path, dict]:
         if args.arch in ULTRALYTICS:
             model = ultralytics_export(args, tmp, "onnx", opset=17, simplify=True, dynamic=False)
             shutil.copy(one(tmp, ".onnx"), out)
+            drop_export_date(out)
             names = list(model.names.values())
             extra = {"head": "yolo", "classes": "coco80" if args.weights == "coco" else names}
         else:
@@ -148,6 +168,7 @@ def export_tflite(args, fp32_onnx: Path, base: str, precisions: list[str]) -> di
                     opts["data"] = str(calib_yaml(args.calib, tmp))
                 ultralytics_export(args, tmp, "tflite", **opts)
                 shutil.copy(one(tmp, ".tflite"), outs[p])
+                drop_export_date(outs[p])
             else:  # our SSDLite ONNX -> onnx2tf, calibrated with our preprocessing
                 import onnx2tf
 

@@ -24,6 +24,7 @@ from edgetrash.detector import read_manifest
 ZOO_NAME = {"yolov8n": "yolov8n", "yolo11n": "yolov11n"}  # yolov5nu / ssdlite: no zoo recipe (docs/problems.md)
 CALIB_LIMIT = 200
 OPT_LEVEL = re.compile(r"Reducing optimization level to (\d)")  # the DFC's own warning
+CALIB_USED = re.compile(r"Using dataset with (\d+) entries for calibration")  # the zoo recipe may use fewer than we give
 HEAD_CONV = re.compile(r"/model\.\d+/(cv[23])\.(\d)/cv[23]\.\d\.2/Conv")
 ZOO_URL = "https://hailo-model-zoo.s3.eu-west-2.amazonaws.com/ModelZoo/Compiled/v2.17.0/{hw}/{name}.hef"  # Model Zoo v2.17 docs
 
@@ -42,16 +43,20 @@ def head_convs(onnx_file: Path) -> list[str]:
 
 
 def run_logged(cmd: list[str], cwd: Path) -> str:
-    """Run hailomz, show its output, return the optimization level it actually used."""
-    level = "default"
+    """Run hailomz, show its output, return what it actually used: optimization level, calibration images."""
+    level, n_calib = "default", None
     with subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as proc:
         for line in proc.stdout:
             print(line, end="", flush=True)
             if m := OPT_LEVEL.search(line):
                 level = m.group(1)
+            if m := CALIB_USED.search(line):
+                n_calib = int(m.group(1))
     if proc.returncode:
         raise subprocess.CalledProcessError(proc.returncode, cmd)
-    return level
+    if n_calib is None:
+        raise SystemExit("no 'Using dataset with N entries' line in the DFC output: update CALIB_USED for this DFC version")
+    return level, n_calib
 
 
 def fetch_zoo(arch: str, hw: str) -> None:
@@ -118,7 +123,7 @@ def main():
             *head_convs(MODEL_DIR / v["file"]),
         ]
         print(" ".join(cmd))
-        level = run_logged(cmd, tmp)
+        level, n_calib = run_logged(cmd, tmp)
         shutil.copy(tmp / f"{ZOO_NAME[v['arch']]}.hef", out)
     register(
         name,
@@ -134,7 +139,7 @@ def main():
         head="hailo_nms",
         classes=v["classes"],
         calib=str(args.calib),
-        calib_images=CALIB_LIMIT,
+        calib_images=n_calib,  # what the DFC used, not the CALIB_LIMIT we linked
         optimization_level=level,  # 0 = no accuracy recovery: the DFC drops to it without a GPU (docs/problems.md)
     )
 

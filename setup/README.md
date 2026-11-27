@@ -29,7 +29,12 @@
    ```bash
    .venv/bin/python bench/accuracy.py --device <device> --variant <v> --split data/splits/coco-eval.txt --ann data/coco/annotations/coco-eval-subset.json
    ```
-6. **Bring results back:** `scp -r <user>@<pi>.local:~/EdgeTrash/results/raw/<device> results/raw/` on the laptop, then commit them.
+6. **Bring results back** (on the laptop), then commit them:
+   ```bash
+   scp -r <user>@<pi>.local:~/EdgeTrash/results/raw/<device> results/raw/
+   scp <user>@<pi>.local:~/EdgeTrash/models/manifest.yaml models/manifest.yaml   # only if you ran compile_tvm.py on the Pi
+   git diff models/manifest.yaml   # must show only the new *-tvm_* entries
+   ```
 
 **Success = the smoke test prints a p50 for every variant that has a model file.**
 

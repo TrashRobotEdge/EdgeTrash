@@ -30,11 +30,17 @@ def os_name() -> str:
     return platform.platform()
 
 
+def command() -> str:
+    """This process's command line, repo paths made relative: the same string on every machine."""
+    rel = [str(Path(a).relative_to(REPO)) if Path(a).is_absolute() and Path(a).is_relative_to(REPO) else a for a in sys.argv]
+    return "python " + shlex.join(rel)
+
+
 def run_meta() -> dict:
     return {
         "commit": git("rev-parse", "HEAD"),
-        "dirty": bool(git("status", "--porcelain", "--untracked-files=no")),
-        "command": "python " + shlex.join(sys.argv),
+        "dirty": git("diff", "--name-only", "HEAD").splitlines(),  # tracked files changed since the commit, [] = clean
+        "command": command(),
         "utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "host": platform.node(),
         "machine": platform.machine(),
